@@ -27,5 +27,6 @@ model Game {
   status      Int
   type        Int
   createdAt   DateTime  @default(now())
+  startedAt   DateTime?
   completedAt DateTime?
 }

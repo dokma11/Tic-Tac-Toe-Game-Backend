@@ -33,4 +33,20 @@ export class GameRepository implements IGameRepository {
             }
         });
     }
+
+    // start game includes updating game's status and adding the id of the opposing player (if the game is of multiplayer type)
+    public async startGame(publicId: string, playerId: string): Promise<Game> {
+        console.log('Game repository: start game with public id: ' + publicId + ' joined by y player with id: ' + id);
+
+        return await prisma.game.update({
+            where: {
+                publicId: parseInt(publicId)
+            },
+            data: {
+                yPlayerId: parseInt(playerId),
+                status: 1,
+                startedAt: new Date(),
+            }
+        });
+    }
 }

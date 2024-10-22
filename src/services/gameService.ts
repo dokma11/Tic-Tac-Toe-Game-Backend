@@ -38,4 +38,8 @@ export class GameService {
         console.log('Game service: get by public id: ' + publicId);
         return await this.repository.getByPublicId(publicId);
     }
+
+    public async join(publicId: string, id: string) {
+        return await this.repository.startGame(publicId, id);
+    }
 }

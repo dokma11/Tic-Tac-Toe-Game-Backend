@@ -1,4 +1,4 @@
-import { Router, Request, Response } from "express";
+import { Router, Request, Response, NextFunction } from "express";
 import { UserService } from "../services/userService";
 const jwt = require('jsonwebtoken');
 import dotenv from 'dotenv';
