@@ -13,4 +13,19 @@ model User {
   lastName  String
   email     String @unique
   password  String
+  gamesAsX  Game[] @relation("XPlayerGames")
+  gamesAsY  Game[] @relation("YPlayerGames")
+}
+
+model Game {
+  id          Int       @id @default(autoincrement())
+  publicId    Int       @unique
+  xPlayer     User      @relation("XPlayerGames", references: [id], fields: [xPlayerId])
+  xPlayerId   Int
+  yPlayer     User?     @relation("YPlayerGames", references: [id], fields: [yPlayerId])
+  yPlayerId   Int?
+  status      Int
+  type        Int
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
 }
