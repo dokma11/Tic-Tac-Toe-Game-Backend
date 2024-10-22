@@ -17,6 +17,10 @@ export class UserController {
     private async getByEmail(req: Request, res: Response) {
         console.log('User controller: get by email')
 
+        if (!req.params.email) {
+            res.status(400).send('The email must be provided');
+        }
+
         const result = await this.service.getByEmail(req.params.email);
         console.log('Result of get by email: ' + result);
 
@@ -25,7 +29,7 @@ export class UserController {
             res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email }); // proveriti samo da li je ovo dobar return
         } else {
             console.log('Failed to retrieve by email!');
-            res.status(500).send('Internal server error: Could not find the user' );
+            res.status(500).send('Internal server error: Could not find the user');
         }
 
     }

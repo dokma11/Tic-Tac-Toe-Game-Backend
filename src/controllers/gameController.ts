@@ -2,7 +2,6 @@ import { Request, Response, Router } from "express";
 import { GameService } from "../services/gameService";
 import { GameRepository } from "../repositories/gameRepository";
 
-// dodati neki vid validacije
 export class GameController {
     private router: Router;
 
@@ -20,6 +19,10 @@ export class GameController {
     private async create(req: Request, res: Response) {
         console.log('Game controller: create')
 
+        if (!req.body.xPlayerId || !req.body.type) {
+            return res.status(400).send('Game type and the game creator must be defined');
+        }
+
         const result = await this.service.create(req.body);
 
         if(result) {
@@ -33,6 +36,10 @@ export class GameController {
 
     private async getById(req: Request, res: Response) {
         console.log('Game controller: get by id')
+
+        if(!req.params.id) {
+            return res.status(400).send('Id must be provided');
+        }
 
         const result = await this.service.getById(req.params.id);
         console.log('Result of get by id: ' + result);
@@ -48,6 +55,10 @@ export class GameController {
 
     private async getByPublicId(req: Request, res: Response) {
         console.log('Game controller: get by public id')
+
+        if(!req.params.publicId) {
+            return res.status(400).send('Public id must be provided');
+        }
 
         const result = await this.service.getByPublicId(req.params.publicId);
         console.log('Result of get by public id: ' + result);
