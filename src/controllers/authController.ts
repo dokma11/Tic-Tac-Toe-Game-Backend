@@ -27,7 +27,7 @@ export class AuthController {
             const result = await this.service.login(req.body);
             if (result.success) {
                 console.log('Successfully logged in  with those credentials!');
-                const token = jwt.sign({ id: result.id }, process.env.JWT as string)
+                const token = jwt.sign({ id: result.id }, process.env.JWT as string) // mozda ovde da dodam neki mejl ili slicno, zavisi sta mi treba na frontu
                 return res.send(token);
             } else {
                 console.log('Failed to logn in with those credentials!');
@@ -49,7 +49,7 @@ export class AuthController {
 
             if(result.success) {
                 console.log('Successfully registered a new user!');
-                const token = jwt.sign({ id: result.user.id }, process.env.JWT as string);
+                const token = jwt.sign({ id: result.user.id }, process.env.JWT as string); // mozda ovde da dodam neki mejl ili slicno, zavisi sta mi treba na frontu
                 return res.header('x-auth-token', token).send({ firstName: result.user.firstName, lastName: result.user.lastName, email: result.user.email });
             } else {
                 console.log('Failed to register a new user!');
