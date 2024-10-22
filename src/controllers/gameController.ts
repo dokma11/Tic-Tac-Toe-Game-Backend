@@ -80,6 +80,10 @@ export class GameController {
     private async join(req: Request, res: Response) {
         const authHeader = req.headers.authorization;
 
+        if (!req.params.publicId) {
+            return res.status(400).send('Public id of the game must be provided');
+        }
+
         if (authHeader && authHeader.startsWith('Bearer ')) {
             const token = authHeader.split(' ')[1];
             try {
