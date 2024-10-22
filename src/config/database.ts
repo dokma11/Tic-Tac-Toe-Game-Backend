@@ -2,7 +2,9 @@ import { PrismaClient } from '@prisma/client'
 
 export const prisma = new PrismaClient()
 
-async function main() { }
+async function main() {
+    console.log('Database and prisma client are ready!');
+}
 
 main()
     .then(async () => {
