@@ -24,14 +24,13 @@ export class UserController {
         const result = await this.service.getByEmail(req.params.email);
         console.log('Result of get by email: ' + result);
 
-        if (result) {
-            console.log('Successfully retrieved by email!');
-            res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email }); // proveriti samo da li je ovo dobar return
-        } else {
+        if (!result) {
             console.log('Failed to retrieve by email!');
             res.status(500).send('Internal server error: Could not find the user');
         }
 
+        console.log('Successfully retrieved by email!');
+        res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email }); // proveriti samo da li je ovo dobar return
     }
 
     public getRouter(): Router {
