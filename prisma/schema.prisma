@@ -15,6 +15,7 @@ model User {
   password  String
   gamesAsX  Game[] @relation("XPlayerGames")
   gamesAsY  Game[] @relation("YPlayerGames")
+  madeMoves Move[] @relation("UserWhoPlayedTheMove")
 }
 
 model Game {
@@ -29,4 +30,16 @@ model Game {
   createdAt   DateTime  @default(now())
   startedAt   DateTime?
   completedAt DateTime?
+  moves       Move[]
+}
+
+model Move {
+  id          Int      @id @default(autoincrement())
+  game        Game     @relation(references: [id], fields: [gameId])
+  gameId      Int
+  user        User     @relation("UserWhoPlayedTheMove", references: [id], fields: [userId])
+  userId      Int
+  xCoordinate Int
+  yCoordinate Int
+  createdAt   DateTime @default(now())
 }
