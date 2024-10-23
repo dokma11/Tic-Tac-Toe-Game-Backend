@@ -1,6 +1,7 @@
 import { IGameRepository } from "./interfaces/iGameRepository";
 import { prisma } from "../config/database";
 import { Game } from "../models/game";
+import {type} from "node:os";
 
 export class GameRepository implements IGameRepository {
     constructor() { }
@@ -11,7 +12,7 @@ export class GameRepository implements IGameRepository {
         return await prisma.game.create({
             data: {
                 publicId: newGame.publicId,
-                xPlayerId: newGame.xPlayerId,
+                xPlayerId: parseInt(newGame.xPlayerId),
                 status: newGame.status,
                 type: newGame.type,
             }

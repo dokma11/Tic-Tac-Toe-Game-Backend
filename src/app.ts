@@ -16,6 +16,16 @@ const port = process.env.PORT as string;
 
 require("./config/routes")(app);
 
-app.listen(port, () => {
+import http from "http";
+import { WebSocketService } from "./config/webSocket";
+import { MoveRepository } from "./repositories/moveRepository";
+import { MoveService } from "./services/moveService";
+import { MoveController } from "./controllers/moveController";
+const server = http.createServer(app);
+
+const moveController = new MoveController(new MoveService(new MoveRepository()));
+const webSocketService = new WebSocketService(server, moveController);
+
+server.listen(port, () => {
     console.log(`listening on port ${port}`);
 });

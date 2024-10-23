@@ -8,7 +8,7 @@ export class GameService {
         this.repository = gameRepository;
     }
 
-    public async create(newGame: Game) {
+    public async create(type: string, userId: string) {
         console.log('Game service: create');
 
         // make sure the randomized public id doesn't already exist
@@ -21,9 +21,9 @@ export class GameService {
 
         const game = {
             publicId: publicId,
-            xPlayerId: newGame.xPlayerId,
+            xPlayerId: userId,
             status: 0,
-            type: newGame.type,
+            type: type,
         }
 
         return await this.repository.create(game);
