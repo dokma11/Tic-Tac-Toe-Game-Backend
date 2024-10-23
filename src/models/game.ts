@@ -14,6 +14,7 @@ export enum gameStatus {
     CREATED = 0,
     STARTED = 1,
     COMPLETED = 2,
+    CANCELLED = 3
 }
 
 export enum gameType {

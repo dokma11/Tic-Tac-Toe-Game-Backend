@@ -40,6 +40,16 @@ export class GameService {
     }
 
     public async join(publicId: string, id: string) {
-        return await this.repository.startGame(publicId, id);
+        return await this.repository.start(publicId, id);
+    }
+
+    public async cancel(publicId: string, userId: string) {
+        const game = await this.repository.getByPublicId(publicId);
+
+        // only the games creator (x player) can cancel the game
+        if(game.xPlayerId !== parseInt(userId)) return { success: false, game: null };
+
+        const result = await this.repository.cancel(publicId);
+        return { success: true, game: result };
     }
 }

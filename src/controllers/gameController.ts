@@ -18,7 +18,8 @@ export class GameController {
         this.router.post("/", this.create.bind(this));
         this.router.get("/id/:id", this.getById.bind(this));
         this.router.get("/public-id/:publicId", this.getByPublicId.bind(this));
-        this.router.post("/join/:publicId", this.join.bind(this));
+        this.router.put("/join/:publicId", this.join.bind(this));
+        this.router.put("/cancel/:publicId", this.cancel.bind(this));
     }
 
     private async create(req: Request, res: Response) {
@@ -110,6 +111,34 @@ export class GameController {
             }
 
             console.log('Successfully joined the game with public id: ' + req.params.publicId);
+            res.status(200).send();
+        } catch (err) {
+            console.log(err);
+            console.log(err.message);
+            return res.status(403).json({ message: 'Invalid or expired token' });
+        }
+    }
+
+    private async cancel(req: Request, res: Response) {
+        console.log('Game controller: cancel');
+        const authHeader = req.headers.authorization;
+
+        if (!req.params.publicId) return res.status(400).send('Public id of the game must be provided');
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
+
+            const result = await this.service.cancel(req.params.publicId, decoded.id.toString());
+
+            if (!result) {
+                console.log('Failed to cancel the game with public id: ' + req.params.publicId);
+                res.status(500).send('Internal server error: Could not cancel the game by public id' + req.params.publicId);
+            }
+
+            console.log('Successfully cancelled the game with public id: ' + req.params.publicId);
             res.status(200).send();
         } catch (err) {
             console.log(err);

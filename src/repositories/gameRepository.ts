@@ -1,7 +1,6 @@
 import { IGameRepository } from "./interfaces/iGameRepository";
 import { prisma } from "../config/database";
 import { Game } from "../models/game";
-import {type} from "node:os";
 
 export class GameRepository implements IGameRepository {
     constructor() { }
@@ -36,18 +35,41 @@ export class GameRepository implements IGameRepository {
     }
 
     // start game includes updating game's status and adding the id of the opposing player (if the game is of multiplayer type)
-    public async startGame(publicId: string, playerId: string): Promise<Game> {
-        console.log('Game repository: start game with public id: ' + publicId + ' joined by y player with id: ' + playerId);
+    public async start(publicId: string, playerId: string): Promise<Game> {
+        console.log(`Game repository: start game with publicId: ${publicId} and playerId: ${playerId}`);
 
-        return await prisma.game.update({
-            where: {
-                publicId: parseInt(publicId)
-            },
-            data: {
-                yPlayerId: parseInt(playerId),
-                status: 1,
-                startedAt: new Date(),
-            }
-        });
+        try {
+            return await prisma.game.update({
+                where: {
+                    publicId: parseInt(publicId)
+                },
+                data: {
+                    yPlayerId: parseInt(playerId),
+                    status: 1,
+                    startedAt: new Date(),
+                }
+            });
+        } catch (error) {
+            console.error('Failed to update game:', error);
+            throw new Error('Could not start game.');
+        }
+    }
+
+    public async cancel(publicId): Promise<Game> {
+        console.log(`Game repository: cancel game with publicId: ${publicId}`);
+
+        try {
+            return await prisma.game.update({
+                where: {
+                    publicId: parseInt(publicId)
+                },
+                data: {
+                    status: 3
+                }
+            });
+        } catch (error) {
+            console.error('Failed to cancel game:', error);
+            throw new Error('Could not cancel game.');
+        }
     }
 }
