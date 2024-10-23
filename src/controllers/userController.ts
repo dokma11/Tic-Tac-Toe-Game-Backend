@@ -18,7 +18,7 @@ export class UserController {
         console.log('User controller: get by email')
 
         if (!req.params.email) {
-            res.status(400).send('The email must be provided');
+            return res.status(400).send('The email must be provided');
         }
 
         const result = await this.service.getByEmail(req.params.email);
@@ -26,11 +26,11 @@ export class UserController {
 
         if (!result) {
             console.log('Failed to retrieve by email!');
-            res.status(500).send('Internal server error: Could not find the user');
+            return res.status(500).send('Internal server error: Could not find the user');
         }
 
         console.log('Successfully retrieved by email!');
-        res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email }); // proveriti samo da li je ovo dobar return
+        return res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email }); // proveriti samo da li je ovo dobar return
     }
 
     public getRouter(): Router {

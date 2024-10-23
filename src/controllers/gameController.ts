@@ -3,6 +3,7 @@ import { GameService } from "../services/gameService";
 import { GameRepository } from "../repositories/gameRepository";
 const jwt = require('jsonwebtoken');
 import dotenv from 'dotenv';
+import { webSocketService } from "../app";
 
 dotenv.config();
 
@@ -63,19 +64,19 @@ export class GameController {
 
         if (!result) {
             console.log('Failed to retrieve by id!');
-            res.status(500).send('Internal server error: Could not find the game by id: ' + req.params.id);
+            return res.status(500).send('Internal server error: Could not find the game by id: ' + req.params.id);
         }
 
         console.log('Successfully retrieved by id!');
-        res.status(200).send(result);
+        return res.status(200).send(result);
     }
 
     // ovo ce mi biti potrebno za sam history neke partije, moracu da dobavim i poteze korisnika sve
     private async getByPublicId(req: Request, res: Response) {
         console.log('Game controller: get by public id')
 
-        if(!req.params.publicId) {
-            return res.status(400).send('Public id must be provided');
+        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) {
+            return res.status(400).send('Invalid public id provided');
         }
 
         const result = await this.service.getByPublicId(req.params.publicId);
@@ -83,13 +84,14 @@ export class GameController {
 
         if (!result) {
             console.log('Failed to retrieve by public id!');
-            res.status(500).send('Internal server error: Could not find the game by public id' );
+            return res.status(500).send('Internal server error: Could not find the game by public id' );
         }
 
         console.log('Successfully retrieved by public id!');
-        res.status(200).send({publicId: result.publicId, status: result.status, type: result.type}); // vratitit se samo da se proveri da li se dobre info salju na klijent
+        return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type}); // vratitit se samo da se proveri da li se dobre info salju na klijent
     }
 
+    // nekako moram da posaljem klijentu da je drugi igrac joinovao partiju, moram i tacno odredjenom klijentu to da javim jebeno
     private async join(req: Request, res: Response) {
         const authHeader = req.headers.authorization;
 
@@ -107,11 +109,11 @@ export class GameController {
 
             if (!result) {
                 console.log('Failed to join the game with public id: ' + req.params.publicId);
-                res.status(500).send('Internal server error: Could not join the game by public id' + req.params.publicId);
+                return res.status(500).send('Internal server error: Could not join the game by public id' + req.params.publicId);
             }
 
             console.log('Successfully joined the game with public id: ' + req.params.publicId);
-            res.status(200).send();
+            return res.status(200).send();
         } catch (err) {
             console.log(err);
             console.log(err.message);
@@ -135,11 +137,11 @@ export class GameController {
 
             if (!result) {
                 console.log('Failed to cancel the game with public id: ' + req.params.publicId);
-                res.status(500).send('Internal server error: Could not cancel the game by public id' + req.params.publicId);
+                return res.status(500).send('Internal server error: Could not cancel the game by public id' + req.params.publicId);
             }
 
             console.log('Successfully cancelled the game with public id: ' + req.params.publicId);
-            res.status(200).send();
+            return res.status(200).send();
         } catch (err) {
             console.log(err);
             console.log(err.message);
