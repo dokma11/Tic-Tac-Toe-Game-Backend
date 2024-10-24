@@ -1,9 +1,9 @@
 import { MoveService } from "../services/moveService";
 import { Router, Request, Response } from "express";
 import { MoveRepository } from "../repositories/moveRepository";
+import { GameRepository } from "../repositories/gameRepository";
 const jwt = require('jsonwebtoken');
 
-// vrlo moguce da ce se ova klasa sa resta prebacivati na veb sokete
 export class MoveController {
     private router: Router;
 
@@ -16,34 +16,39 @@ export class MoveController {
         this.router.get("/game-id/:gameId", this.getAllByGameId.bind(this));
         this.router.get("/user-id/:userId", this.getAllByUserId.bind(this));
         this.router.get("/latest/:gameId", this.getLatest.bind(this));
-        this.router.post("/", this.create.bind(this));
     }
 
-    // create is basically equivalent of making a move on the board
-    private async create(req: Request, res: Response) {
-        console.log('Move controller: create')
+    // dakle ideja je da napravim ovde novi potez. format poruke (move: <indeks tj koor polja>; gameId: <game id>; token: <token kao string>) e sad pitanje je kako da dobavim id korisnika
+    public async handleWebSocketMessage(message: any): Promise<{success: boolean, gameId: string, player: string, moveIndex: string}> {
+        console.log('Move controller: WebSocket create');
 
-        const authHeader = req.headers.authorization;
+        if (!message) return // hendlovati bolje
 
-        if (!req.params.gameId) return res.status(400).send('Game id for the corresponding move must be provided');
+        const messageParts = message.toString().split(';');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+        if (messageParts.length != 3) return //hendlovati bolje
 
-        const token = authHeader.split(' ')[1];
+        const moveIndex =  messageParts[0].split(':')[1];
+        const gameId = messageParts[1];
+        const token = messageParts[2].slice(0, -1); // BOGU HVALA VISE
+
         try {
             const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
+            console.log('dekodiran jwt id: ' + decoded.id.toString());
 
-            const result = await this.service.create(req.body, decoded.id.toString()); // ovde saljem samo telo (potez) i id korisnika uzimam iz bearera sa servera
+            const result = await this.service.create(moveIndex, gameId, decoded.id.toString());
 
-            if (!result) {
-                console.log('Failed to create the move fot the game with id: ' + req.params.gameId);
-                res.status(500).send('Internal server error: Could not create the move for the game with id: ' + req.params.gameId);
+            if (!result.success) {  // vratiti se ovde
+                console.log('Failed to create the move for the game with id: ' + gameId);
+                return { success: false, gameId: gameId, player: '', moveIndex: '' };
             }
 
-            console.log('Successfully created the move for the game with id: ' + req.params.gameId);
-            res.status(200).send();
+            console.log('Successfully created the move for the game with id: ' + gameId);
+            return { success: result.success, gameId: gameId, player: result.player, moveIndex: result.moveIndex };
         } catch (err) {
-            return res.status(403).json({ message: 'Invalid or expired token' });
+            console.log(err);
+            console.log(err.message);
+            return { success: false, gameId: gameId, player: '', moveIndex: '' };
         }
     }
 
@@ -100,6 +105,6 @@ export class MoveController {
     }
 }
 
-const moveController = new MoveController(new MoveService(new MoveRepository()));
+const moveController = new MoveController(new MoveService(new MoveRepository(), new GameRepository()));
 
 export default moveController;

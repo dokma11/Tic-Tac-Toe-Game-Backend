@@ -3,16 +3,21 @@ import { GameService } from "../services/gameService";
 import { GameRepository } from "../repositories/gameRepository";
 const jwt = require('jsonwebtoken');
 import dotenv from 'dotenv';
+import { WebSocketService } from "../config/webSocket";
 import { webSocketService } from "../app";
 
 dotenv.config();
 
 export class GameController {
     private router: Router;
+    private webSocketService: WebSocketService;
 
-    constructor(private readonly service: GameService) {
+    constructor(private readonly service: GameService, private readonly wss: WebSocketService) {
         this.router = Router();
         this.setupRoutes();
+        if (wss) {
+            this.webSocketService = wss;
+        }
     }
 
     private setupRoutes() {
@@ -88,10 +93,9 @@ export class GameController {
         }
 
         console.log('Successfully retrieved by public id!');
-        return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type}); // vratitit se samo da se proveri da li se dobre info salju na klijent
+        return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type});
     }
 
-    // nekako moram da posaljem klijentu da je drugi igrac joinovao partiju, moram i tacno odredjenom klijentu to da javim jebeno
     private async join(req: Request, res: Response) {
         const authHeader = req.headers.authorization;
 
@@ -113,6 +117,7 @@ export class GameController {
             }
 
             console.log('Successfully joined the game with public id: ' + req.params.publicId);
+            this.webSocketService.broadcastMessage('join request for game with public id: ' + req.params.publicId);
             return res.status(200).send();
         } catch (err) {
             console.log(err);
@@ -152,8 +157,9 @@ export class GameController {
     public getRouter(): Router {
         return this.router;
     }
+
 }
 
-const gameController = new GameController(new GameService(new GameRepository));
+const gameController = new GameController(new GameService(new GameRepository), webSocketService);
 
 export default gameController;

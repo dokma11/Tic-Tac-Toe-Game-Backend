@@ -14,17 +14,17 @@ import dotenv from 'dotenv';
 dotenv.config();
 const port = process.env.PORT as string;
 
-require("./config/routes")(app);
-
 import http from "http";
-import { WebSocketService } from "./config/webSocket";
-import { MoveRepository } from "./repositories/moveRepository";
-import { MoveService } from "./services/moveService";
-import { MoveController } from "./controllers/moveController";
-const server = http.createServer(app);
 
-const moveController = new MoveController(new MoveService(new MoveRepository()));
-const webSocketService = new WebSocketService(server, moveController);
+import { WebSocketService } from "./config/webSocket";
+import { MoveController } from "./controllers/moveController";
+import { MoveService } from "./services/moveService";
+import { MoveRepository } from "./repositories/moveRepository";
+import { GameRepository } from "./repositories/gameRepository";
+export const server = http.createServer(app);
+export const webSocketService = new WebSocketService(server, new MoveController(new MoveService(new MoveRepository(), new GameRepository())));
+
+require("./config/routes")(app);
 
 server.listen(port, () => {
     console.log(`listening on port ${port}`);

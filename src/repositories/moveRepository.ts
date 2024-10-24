@@ -11,7 +11,7 @@ export class MoveRepository implements IMoveRepository {
         return await prisma.move.create({
             data: {
                 gameId: newMove.gameId,
-                userId: newMove.userId,
+                userId: parseInt(newMove.userId),
                 xCoordinate: newMove.xCoordinate,
                 yCoordinate: newMove.yCoordinate,
             }
