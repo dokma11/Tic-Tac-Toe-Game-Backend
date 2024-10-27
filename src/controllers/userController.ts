@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { UserService } from "../services/userService";
 import { UserRepository } from "../repositories/userRepository";
+const jwt = require('jsonwebtoken');
 
 export class UserController {
     private router: Router;
@@ -12,6 +13,7 @@ export class UserController {
 
     private setupRoutes() {
         this.router.get("/email/:email", this.getByEmail.bind(this));
+        this.router.get("/profile", this.getProfile.bind(this));
     }
 
     private async getByEmail(req: Request, res: Response) {
@@ -31,6 +33,33 @@ export class UserController {
 
         console.log('Successfully retrieved by email!');
         return res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email }); // proveriti samo da li je ovo dobar return
+    }
+
+    private async getProfile(req: Request, res: Response) {
+        console.log('User controller: get profile')
+
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+
+        const token = authHeader.split(' ')[1];
+        try {
+            const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
+
+            const result = await this.service.getById(decoded.id.toString());
+
+            if(!result) {
+                console.log('Failed to retrieve the user by id: ' + decoded.id.toString());
+                return res.status(500).send('Internal server error: Could not retrieve the user by id: ' + decoded.id.toString());
+            }
+
+            console.log('Successfully retrieved the user by id: ' + decoded.id.toString())
+            return res.status(200).send({firstName: result.firstName, lastName: result.lastName, email: result.email});
+        } catch (err) {
+            console.log(err);
+            console.log(err.message);
+            return res.status(403).json({ message: 'Invalid or expired token' });
+        }
     }
 
     public getRouter(): Router {
