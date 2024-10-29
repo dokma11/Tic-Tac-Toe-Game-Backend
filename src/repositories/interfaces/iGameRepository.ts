@@ -6,4 +6,5 @@ export interface IGameRepository {
     getByPublicId(publicId: string): Promise<Game>;
     start(publicId: string, playerId: string): Promise<Game>;
     cancel(publicId: string): Promise<Game>;
+    finish(publicId: string): Promise<Game>;
 }

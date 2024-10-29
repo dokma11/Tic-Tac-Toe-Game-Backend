@@ -72,4 +72,22 @@ export class GameRepository implements IGameRepository {
             throw new Error('Could not cancel game.');
         }
     }
+
+    public async finish(publicId): Promise<Game> {
+        console.log(`Game repository: finish the game with publicId: ${publicId}`);
+
+        try {
+            return await prisma.game.update({
+                where: {
+                    publicId: parseInt(publicId)
+                },
+                data: {
+                    status: 2
+                }
+            });
+        } catch (error) {
+            console.error('Failed to finish the game:', error);
+            throw new Error('Could not finish the game.');
+        }
+    }
 }

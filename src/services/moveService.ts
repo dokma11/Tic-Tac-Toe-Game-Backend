@@ -12,7 +12,7 @@ export class MoveService {
     }
 
     public async create(moveIndex: string, gameId: string, userId: string): Promise<{success: boolean, move: Move,
-        player: string, moveIndex: string, gameOver: boolean}> {
+        player: string, moveIndex: string, gameOver: boolean, draw: boolean}> {
         const coordinates = this.convertIndexToArray(moveIndex);
 
         const game = await this.gameRepository.getByPublicId(gameId);
@@ -26,19 +26,26 @@ export class MoveService {
 
         const result = await this.repository.create(newMove);
 
-        if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+        if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
 
         // after every move we check if the game is over
         if (await this.isGameOver(gameId, userId)) {
-            if (game.xPlayerId === parseInt(userId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true };
-            return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true };
+            if (game.xPlayerId === parseInt(userId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: false };
+            return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true, draw: false };
+        }
+
+        const allMoves = await this.repository.getAllByGamePublicId(gameId);
+        if (allMoves.length === 9) {
+            console.log('The game is a draw!');
+            await this.gameRepository.finish(gameId);
+            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: true };
         }
 
         if (game.xPlayerId === parseInt(userId)) {
-            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: false };
+            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: false, draw: false };
         }
 
-        return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false };
+        return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false, draw: false };
     }
 
     public async getAllByGameId(gameId: string): Promise<Move[]> {
@@ -54,6 +61,14 @@ export class MoveService {
 
         const game = await this.gameRepository.getByPublicId(gameId);
         const computerId = "-111";
+
+        const allMoves = await this.repository.getAllByGamePublicId(gameId);
+        if (allMoves.length === 9) {
+            console.log('The computer has no left moves to make.');
+            await this.gameRepository.finish(gameId);
+            return { success: true, move: 'none', player: 'none', moveIndex: '-1', gameOver: true };
+        }
+
         const moveCoordinates = await this.chooseMove(game.id);
         const moveIndex = this.convertArrayToIndex(moveCoordinates.xCoordinate, moveCoordinates.yCoordinate);
 
@@ -65,8 +80,6 @@ export class MoveService {
         }
 
         const result = await this.repository.create(newMove);
-
-        console.log('kreiran novi potez');
 
         // racunar ce uvek biti y igrac (O)
         // ovaj deo bih mozda i mogao samo da izdvojim u fju - uraditi kasnije pri refaktorisanju
@@ -85,13 +98,18 @@ export class MoveService {
 
         const madeMoves = await this.repository.getAllByGameId(gameId);
 
+        if (madeMoves.length === 9){
+            console.log('The computer can not choose a move because it has no left moves to make.');
+            return { xCoordinate: -1, yCoordinate: -1 };
+        }
+
         // initialize a new move
         let newMove = {
             xCoordinate: 1,
             yCoordinate: 1,
         };
 
-        // if the new move is already made, generate a new one
+        // if the new move is already made, generate a new one - moram proveriti da li ih je 9, onda logicno ne moze ni da napravi potez
         do {
             newMove = {
                 xCoordinate: Math.floor(Math.random() * 3),
@@ -166,11 +184,19 @@ export class MoveService {
 
             if (hasWinningCombination) {
                 console.log(`Player ${userId} has won the game!`);
+                const result = await this.gameRepository.finish(gameId);
+
+                if (!result) return false;
                 return true;
             }
         }
 
         return false;
+    }
+
+    private async isGameDrawn(gameId: string) {
+        const allMoves = await this.moveRepository.getAllByGameId(gameId);
+
     }
 
 }

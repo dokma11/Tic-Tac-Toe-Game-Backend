@@ -28,11 +28,11 @@ export class WebSocketService {
                     const result = await this.moveController.handleWebSocketMessage(message);
 
                     if(result.success && result.gameOver) {
-                        return this.broadcastMessage('finish;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';');
+                        return this.broadcastMessage('finish;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.draw);
                     }
 
                     if(result.success) {
-                        return this.broadcastMessage('move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.gameOver.toString());
+                        return this.broadcastMessage('move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.gameOver.toString() + ';' + result.draw);
                     }
                 } else if(message.toString().includes('single-player')) {
                     console.log('Single player move called');
@@ -43,9 +43,11 @@ export class WebSocketService {
                     const computerResult = await this.moveController.computerMove(message);
 
                     if(result.success && computerResult.success) {
-                        if (result.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';x;' + result.moveIndex + ';' + result.gameOver + ';' + computerResult.moveIndex);
+                        if (result.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';x;'
+                            + result.moveIndex + ';' + result.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
 
-                        if (computerResult.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';y;' + result.moveIndex + ';' + computerResult.gameOver + ';' + computerResult.moveIndex);
+                        if (computerResult.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';y;'
+                            + result.moveIndex + ';' + computerResult.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
 
                         return this.broadcastMessage('single-player-move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.gameOver.toString() + ';' + computerResult.moveIndex);
                     }

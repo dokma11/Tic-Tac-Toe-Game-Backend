@@ -17,19 +17,20 @@ export class MoveController {
         this.router.get("/user-id/:userId", this.getAllByUserId.bind(this));
     }
 
-    public async handleWebSocketMessage(message: any): Promise<{success: boolean, gameId: string, player: string, moveIndex: string, gameOver: boolean}> {
+    public async handleWebSocketMessage(message: any): Promise<{success: boolean, gameId: string, player: string,
+        moveIndex: string, gameOver: boolean, draw: boolean}> {
         console.log('Move controller: WebSocket create');
 
         if (!message) {
             console.log('Message unavailable');
-            return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false };
+            return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false, draw: false };
         }
 
         const messageParts = message.toString().split(';');
 
         if (messageParts.length != 3) {
             console.log('Message has wrong length');
-            return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false };
+            return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false, draw: false };
         }
 
         const moveIndex =  messageParts[0].split(':')[1];
@@ -43,15 +44,15 @@ export class MoveController {
 
             if (!result.success) {
                 console.log('Failed to create the move for the game with id: ' + gameId);
-                return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false };
+                return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false, draw: false };
             }
 
             console.log('Successfully created the move for the game with id: ' + gameId);
-            return { success: result.success, gameId: gameId, player: result.player, moveIndex: result.moveIndex, gameOver: result.gameOver };
+            return { success: result.success, gameId: gameId, player: result.player, moveIndex: result.moveIndex, gameOver: result.gameOver, draw: result.draw };
         } catch (err) {
             console.log(err);
             console.log(err.message);
-            return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false };
+            return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false, draw: false };
         }
     }
 

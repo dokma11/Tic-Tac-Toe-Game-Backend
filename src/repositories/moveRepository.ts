@@ -26,6 +26,16 @@ export class MoveRepository implements IMoveRepository {
         });
     }
 
+    public async getAllByGamePublicId(publicId: string): Promise<Move[]> {
+        return await prisma.move.findMany({
+            where: {
+                game: {
+                    publicId: parseInt(publicId)
+                }
+            }
+        });
+    }
+
     public async getAllByUserId(userId: string): Promise<Move[]> {
         return await prisma.move.findMany({
             where: {
