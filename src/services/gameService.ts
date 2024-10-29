@@ -47,6 +47,16 @@ export class GameService {
         return await this.repository.getByPublicId(publicId);
     }
 
+    public async getHistoryByPublicId(publicId: string) {
+        console.log('Game service: get history by public id: ' + publicId);
+        const result = await this.repository.getWithMovesByPublicId(publicId);
+
+        console.log('pokusaj neki moves: ' + result.moves);
+        console.log('pokusaj neki public id: ' + result.publicId);
+
+        return result;
+    }
+
     public async join(publicId: string, id: string) {
         return await this.repository.start(publicId, id);
     }

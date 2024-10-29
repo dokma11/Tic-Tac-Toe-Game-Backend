@@ -26,6 +26,7 @@ export class GameController {
         this.router.get("/public-id/:publicId", this.getByPublicId.bind(this));
         this.router.put("/join/:publicId", this.join.bind(this));
         this.router.put("/cancel/:publicId", this.cancel.bind(this));
+        this.router.get("/history/:publicId", this.getHistoryByPublicId.bind(this));
     }
 
     private async create(req: Request, res: Response) {
@@ -76,7 +77,6 @@ export class GameController {
         return res.status(200).send(result);
     }
 
-    // ovo ce mi biti potrebno za sam history neke partije, moracu da dobavim i poteze korisnika sve
     private async getByPublicId(req: Request, res: Response) {
         console.log('Game controller: get by public id')
 
@@ -94,6 +94,28 @@ export class GameController {
 
         console.log('Successfully retrieved by public id!');
         return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type, xPlayerId: result.xPlayerId, yPlayerId: result.yPlayerId});
+    }
+
+    private async getHistoryByPublicId(req: Request, res: Response) {
+        console.log('Game controller: get history by public id')
+
+        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) {
+            return res.status(400).send('Invalid public id provided');
+        }
+
+        const result = await this.service.getHistoryByPublicId(req.params.publicId);
+
+        console.log('pokusaj contorller neki moves: ' + result.moves);
+        console.log('pokusaj controller neki public id: ' + result.publicId);
+
+        if (!result) {
+            console.log('Failed to retrieve by public id!');
+            return res.status(500).send('Internal server error: Could not find the game by public id' );
+        }
+
+        console.log('Successfully retrieved history by public id!');
+        return res.status(200).send({ publicId: result.publicId, status: result.status, type: result.type,
+            xPlayerId: result.xPlayerId, yPlayerId: result.yPlayerId, moves: result.moves, winnerId: result.winnerId, loserId: result.loserId });
     }
 
     private async join(req: Request, res: Response) {

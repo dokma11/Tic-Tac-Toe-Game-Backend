@@ -1,3 +1,5 @@
+import { Move } from "./move";
+
 export class Game {
     id: number;
     publicId: number; // this is the id that the users will get, so they can join a game
@@ -7,8 +9,9 @@ export class Game {
     type: gameType;
     createdAt: Date;
     completedAt: Date;
-    winnerId?: number;
-    loserId?: number;
+    winnerId?: number; // identifier of the user that has won the game
+    loserId?: number; // identifier of the user that has lost the game
+    moves?: Move[]; // all moves made during the game
 }
 
 export enum gameStatus {

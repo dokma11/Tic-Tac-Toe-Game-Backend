@@ -1,7 +1,7 @@
 import { Request, Response, Router } from "express";
 import { UserService } from "../services/userService";
 import { UserRepository } from "../repositories/userRepository";
-import {GameRepository} from "../repositories/gameRepository";
+import { GameRepository } from "../repositories/gameRepository";
 const jwt = require('jsonwebtoken');
 
 export class UserController {
@@ -15,6 +15,7 @@ export class UserController {
     private setupRoutes() {
         this.router.get("/email/:email", this.getByEmail.bind(this));
         this.router.get("/profile", this.getProfile.bind(this));
+        this.router.get("/id/:id", this.getById.bind(this));
     }
 
     private async getByEmail(req: Request, res: Response) {
@@ -33,7 +34,29 @@ export class UserController {
         }
 
         console.log('Successfully retrieved by email!');
-        return res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email }); // proveriti samo da li je ovo dobar return
+        return res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email });
+    }
+
+    private async getById(req: Request, res: Response) {
+        console.log('User controller: get by id')
+
+        const authHeader = req.headers.authorization;
+
+        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+
+        if (!req.params.id) {
+            return res.status(400).send('The user id must be provided');
+        }
+
+        const result = await this.service.getById(req.params.id);
+
+        if (!result) {
+            console.log('Failed to retrieve by id!');
+            return res.status(500).send('Internal server error: Could not find the user');
+        }
+
+        console.log('Successfully retrieved by id!');
+        return res.status(200).send({ firstName: result.firstName, lastName: result.lastName, email: result.email });
     }
 
     private async getProfile(req: Request, res: Response) {

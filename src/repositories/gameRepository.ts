@@ -34,6 +34,17 @@ export class GameRepository implements IGameRepository {
         });
     }
 
+    public async getWithMovesByPublicId(publicId: string) {
+        return await prisma.game.findUnique({
+            where: {
+                publicId: parseInt(publicId),
+            },
+            include: {
+                moves: true,
+            },
+        });
+    }
+
     // start game includes updating game's status and adding the id of the opposing player (if the game is of multiplayer type)
     public async start(publicId: string, playerId: string): Promise<Game> {
         console.log(`Game repository: start game with publicId: ${publicId} and playerId: ${playerId}`);
