@@ -34,10 +34,13 @@ export class MoveRepository implements IMoveRepository {
         });
     }
 
-    public async getLatest(gameId: string): Promise<Move> {
-        return await prisma.move.findFirst({
-            orderBy: {
-                createdAt: 'desc'
+    public async getAllByUserAndGameId(userId: string, publicId: string): Promise<Move[]> {
+        return await prisma.move.findMany({
+            where: {
+                userId: parseInt(userId),
+                game: {
+                    publicId: parseInt(publicId)
+                }
             }
         });
     }

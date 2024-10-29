@@ -93,7 +93,7 @@ export class GameController {
         }
 
         console.log('Successfully retrieved by public id!');
-        return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type});
+        return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type, xPlayerId: result.xPlayerId, yPlayerId: result.yPlayerId});
     }
 
     private async join(req: Request, res: Response) {

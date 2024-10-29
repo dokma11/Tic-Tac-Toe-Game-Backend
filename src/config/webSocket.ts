@@ -11,8 +11,8 @@ export class WebSocketService {
         this.wss = new WebSocketServer({ server });
         this.clients = new Map();
         this.setupWebSocket();
-        console.log('WebSocket service started');
         this.moveController = mController;
+        console.log('WebSocket service started');
     }
 
     private setupWebSocket() {
@@ -21,22 +21,23 @@ export class WebSocketService {
 
             ws.on("message", async (message) => {
                 console.log("Received:", message.toString());
+                console.log('Broj klijenata: ' + this.clients.size);
 
-                console.log('Velicina klijenata: ' + this.clients.size);
-                console.log('unutar websocketa je playerid: ' + message.toString());
-
-                // ovde sada moram dodati dakle deo koji ce da prepozna da li je porukar ecimo za sam potez i da onda na sosnovu toga pozove neku metodu u kontroleru za MOVE.
-                if(message.toString().includes('move:')) {
+                if(message.toString().includes('move')) {
                     console.log('Move called');
                     const result = await this.moveController.handleWebSocketMessage(message);
 
+                    if(result.success && result.gameOver) {
+                        return this.broadcastMessage('finish;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';');
+                    }
+
                     if(result.success) {
-                        this.broadcastMessage('move;' + result.gameId + ';' + result.player + ';' + result.moveIndex);
+                        return this.broadcastMessage('move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.gameOver.toString());
                     }
                 }
                 else {
                     this.clients.set(message.toString(), ws);
-                    console.log('Velicina klijenata (nakon dodavanja): ' + this.clients.size);
+                    return console.log('Broj klijenata (nakon dodavanja): ' + this.clients.size);
                 }
             });
 
@@ -54,11 +55,8 @@ export class WebSocketService {
 
     public sendMessageToClient(playerId: string, message: string) {
         const clientWs = this.clients.get(playerId);
-        if (clientWs) {
-            clientWs.send(message);
-        } else {
-            console.log(`Client with playerId ${playerId} not found`);
-        }
+        if (!clientWs) return console.log(`Client with playerId ${playerId} not found`);
+        return clientWs.send(message);
     }
 
     public broadcastMessage(message: string) {

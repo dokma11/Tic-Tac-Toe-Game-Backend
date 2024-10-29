@@ -42,4 +42,6 @@ model Move {
   xCoordinate Int
   yCoordinate Int
   createdAt   DateTime @default(now())
+
+  @@unique([gameId, xCoordinate, yCoordinate])
 }

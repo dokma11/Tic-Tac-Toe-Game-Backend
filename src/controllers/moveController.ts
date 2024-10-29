@@ -15,40 +15,43 @@ export class MoveController {
     private setupRoutes() {
         this.router.get("/game-id/:gameId", this.getAllByGameId.bind(this));
         this.router.get("/user-id/:userId", this.getAllByUserId.bind(this));
-        this.router.get("/latest/:gameId", this.getLatest.bind(this));
     }
 
-    // dakle ideja je da napravim ovde novi potez. format poruke (move: <indeks tj koor polja>; gameId: <game id>; token: <token kao string>) e sad pitanje je kako da dobavim id korisnika
-    public async handleWebSocketMessage(message: any): Promise<{success: boolean, gameId: string, player: string, moveIndex: string}> {
+    public async handleWebSocketMessage(message: any): Promise<{success: boolean, gameId: string, player: string, moveIndex: string, gameOver: boolean}> {
         console.log('Move controller: WebSocket create');
 
-        if (!message) return // hendlovati bolje
+        if (!message) {
+            console.log('Message unavailable');
+            return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false };
+        }
 
         const messageParts = message.toString().split(';');
 
-        if (messageParts.length != 3) return //hendlovati bolje
+        if (messageParts.length != 3) {
+            console.log('Message has wrong length');
+            return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false };
+        }
 
         const moveIndex =  messageParts[0].split(':')[1];
         const gameId = messageParts[1];
-        const token = messageParts[2].slice(0, -1); // BOGU HVALA VISE
+        const token = messageParts[2].slice(0, -1);
 
         try {
             const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
-            console.log('dekodiran jwt id: ' + decoded.id.toString());
 
             const result = await this.service.create(moveIndex, gameId, decoded.id.toString());
 
-            if (!result.success) {  // vratiti se ovde
+            if (!result.success) {
                 console.log('Failed to create the move for the game with id: ' + gameId);
-                return { success: false, gameId: gameId, player: '', moveIndex: '' };
+                return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false };
             }
 
             console.log('Successfully created the move for the game with id: ' + gameId);
-            return { success: result.success, gameId: gameId, player: result.player, moveIndex: result.moveIndex };
+            return { success: result.success, gameId: gameId, player: result.player, moveIndex: result.moveIndex, gameOver: result.gameOver };
         } catch (err) {
             console.log(err);
             console.log(err.message);
-            return { success: false, gameId: gameId, player: '', moveIndex: '' };
+            return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false };
         }
     }
 
@@ -81,22 +84,6 @@ export class MoveController {
         }
 
         console.log('Successfully retrieved moves by user id: ' + req.params.userId);
-        return res.status(200).send(result);
-    }
-
-    private async getLatest(req: Request, res: Response) {
-        console.log('Move controller: get the latest move by game id');
-
-        if (!req.params.gameId) return res.status(400).send('Game id must be provided');
-
-        const result = await this.service.getLatest(req.params.gameId);
-
-        if (!result) {
-            console.log('Failed to retrieve the latest move by game id: ' + req.params.gameId);
-            return res.status(500).send('Game id must be provided');
-        }
-
-        console.log('Successfully retrieved the latest move by game id: ' + req.params.gameId);
         return res.status(200).send(result);
     }
 

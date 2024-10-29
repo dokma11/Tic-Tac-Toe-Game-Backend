@@ -6,16 +6,16 @@ export class MoveService {
     private repository: IMoveRepository;
     private gameRepository: IGameRepository;
 
-    constructor(private readonly moveRepository: IMoveRepository, private readonly igameRepository: IGameRepository) {
+    constructor(private readonly moveRepository: IMoveRepository, private readonly iGameRepository: IGameRepository) {
         this.repository = moveRepository;
-        this.gameRepository = igameRepository;
+        this.gameRepository = iGameRepository;
     }
 
-    // ovde moram napraviti algoritam koji ce da proveri da li je partija gotova, ne mora nuzno bas u ovoj metodi, moze da se izdvoji recimo
-    public async create(moveIndex: string, gameId: string, userId: string): Promise<{success: boolean, move: Move, player: string, moveIndex: string}> {
+    public async create(moveIndex: string, gameId: string, userId: string): Promise<{success: boolean, move: Move,
+        player: string, moveIndex: string, gameOver: boolean}> {
         const coordinates = this.convertIndexToArray(moveIndex);
 
-        const game = await this.gameRepository.getByPublicId(gameId);
+        const game = await this.gameRepository.getByPublicId(gameId);545621183
 
         const newMove = {
             gameId: game.id,
@@ -26,13 +26,19 @@ export class MoveService {
 
         const result = await this.repository.create(newMove);
 
-        if(!result) return { success: false, move: null, player: '', moveIndex: '' };
+        if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
 
-        if (game.xPlayerId === parseInt(userId)) {
-            return { success: true, move: result, player: 'x', moveIndex: moveIndex };
+        // after every move we check if the game is over
+        if (await this.isGameOver(gameId, userId)) {
+            if (game.xPlayerId === parseInt(userId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true };
+            return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true };
         }
 
-        return { success: true, move: result, player: 'y', moveIndex: moveIndex };
+        if (game.xPlayerId === parseInt(userId)) {
+            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: false };
+        }
+
+        return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false };
     }
 
     public async getAllByGameId(gameId: string): Promise<Move[]> {
@@ -41,10 +47,6 @@ export class MoveService {
 
     public async getAllByUserId(userId: string): Promise<Move[]> {
         return await this.repository.getAllByUserId(userId);
-    }
-
-    public async getLatest(gameId: string): Promise<Move> {
-        return await this.repository.getLatest(gameId);
     }
 
     private convertIndexToArray(index) {
@@ -70,62 +72,38 @@ export class MoveService {
         }
     }
 
-    private async isGameOver(gameId) {
-        const moves = await this.repository.getAllByGameId(gameId);
+    private async isGameOver(gameId: string, userId: string) {
+        const userMoves = await this.repository.getAllByUserAndGameId(userId, gameId);
 
-        // mozda da nekako podelim na jednog i drugog korisnika
+        // user must have at least three moves made so he/she could win
+        if (userMoves.length < 3) return false;
 
-        const firstUserMoves = moves.filter(move => move.userId);
-        const secondUserMoves = moves.filter(move => move.userId);
+        const winningCombinations = [
+            // winning rows
+            [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }],
+            [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }],
+            [{ x: 2, y: 0 }, { x: 2, y: 1 }, { x: 2, y: 2 }],
+            // winning columns
+            [{ x: 0, y: 0 }, { x: 1, y: 0 }, { x: 2, y: 0 }],
+            [{ x: 0, y: 1 }, { x: 1, y: 1 }, { x: 2, y: 1 }],
+            [{ x: 0, y: 2 }, { x: 1, y: 2 }, { x: 2, y: 2 }],
+            // winning diagonals
+            [{ x: 0, y: 0 }, { x: 1, y: 1 }, { x: 2, y: 2 }],
+            [{ x: 0, y: 2 }, { x: 1, y: 1 }, { x: 2, y: 0 }],
+        ];
 
-        if (firstUserMoves.filter(move => move.xCoordinate === 0).length == 3) {
-            // game finished
+        for (const combination of winningCombinations) {
+            const hasWinningCombination = combination.every(pos =>
+                userMoves.some(move => move.xCoordinate === pos.x && move.yCoordinate === pos.y)
+            );
+
+            if (hasWinningCombination) {
+                console.log(`Player ${userId} has won the game!`);
+                return true;
+            }
         }
 
-        if (firstUserMoves.filter(move => move.xCoordinate === 1).length == 3) {
-            // game finished
-        }
-
-        if (firstUserMoves.filter(move => move.xCoordinate === 2).length == 3) {
-            // game finished
-        }
-
-        if (firstUserMoves.filter(move => move.yCoordinate === 0).length == 3) {
-            // game finished
-        }
-
-        if (firstUserMoves.filter(move => move.yCoordinate === 1).length == 3) {
-            // game finished
-        }
-
-        if (firstUserMoves.filter(move => move.yCoordinate === 2).length == 3) {
-            // game finished
-        }
-
-        if (secondUserMoves.filter(move => move.xCoordinate === 0).length == 3) {
-            // game finished
-        }
-
-        if (secondUserMoves.filter(move => move.xCoordinate === 1).length == 3) {
-            // game finished
-        }
-
-        if (secondUserMoves.filter(move => move.xCoordinate === 2).length == 3) {
-            // game finished
-        }
-
-        if (secondUserMoves.filter(move => move.yCoordinate === 0)) {
-            // game finished
-        }
-
-        if (secondUserMoves.filter(move => move.yCoordinate === 1)) {
-            // game finished
-        }
-
-        if (secondUserMoves.filter(move => move.yCoordinate === 2)) {
-            // game finished
-        }
-
-
+        return false;
     }
+
 }
