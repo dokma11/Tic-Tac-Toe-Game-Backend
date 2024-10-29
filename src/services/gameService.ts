@@ -28,7 +28,11 @@ export class GameService {
         }
 
         // if its single player add the computer "user"
-        if (type === '1') game.yPlayerId = -111;
+        if (type === '1') {
+            game.yPlayerId = -111;
+            await this.repository.create(game);
+            await this.repository.start(game.publicId.toString(), game.yPlayerId);
+        }
 
         return await this.repository.create(game);
     }

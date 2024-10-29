@@ -7,7 +7,8 @@ export class Game {
     type: gameType;
     createdAt: Date;
     completedAt: Date;
-    // moram dodati jos poteze kao listu kasnije
+    winnerId?: number;
+    loserId?: number;
 }
 
 export enum gameStatus {
@@ -21,4 +22,3 @@ export enum gameType {
     SINGLE_PLAYER = 0,
     MULTIPLAYER = 0,
 }
-

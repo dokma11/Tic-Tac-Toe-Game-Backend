@@ -50,7 +50,7 @@ export class GameRepository implements IGameRepository {
                 }
             });
         } catch (error) {
-            console.error('Failed to update game:', error);
+            console.error('Failed to start the game:', error);
             throw new Error('Could not start game.');
         }
     }
@@ -82,12 +82,59 @@ export class GameRepository implements IGameRepository {
                     publicId: parseInt(publicId)
                 },
                 data: {
-                    status: 2
+                    status: 2,
+                    completedAt: new Date(),
                 }
             });
         } catch (error) {
             console.error('Failed to finish the game:', error);
             throw new Error('Could not finish the game.');
         }
+    }
+
+    public async handleResult(publicId: string, winnerId: number, loserId: number): Promise<Game> {
+        console.log(`Game repository: handle the result of the finished game with publicId: ${publicId}`);
+
+        try {
+            return await prisma.game.update({
+                where: {
+                    publicId: parseInt(publicId)
+                },
+                data: {
+                    winnerId: winnerId,
+                    loserId: loserId,
+                }
+            });
+        } catch (error) {
+            console.error('Failed to handle the result of the finished game:', error);
+            throw new Error('Could not handle the result of the finished game.');
+        }
+    }
+
+    public async getAllByWinnerId(userId: string): Promise<Game[]> {
+        return await prisma.game.findMany({
+            where: {
+                winnerId: parseInt(userId)
+            }
+        });
+    }
+
+    public async getAllByLoserId(userId: string): Promise<Game[]> {
+        return await prisma.game.findMany({
+            where: {
+                loserId: parseInt(userId)
+            }
+        });
+    }
+
+    public async getAllByPlayerId(userId: string): Promise<Game[]> {
+        return await prisma.game.findMany({
+            where: {
+                OR: [
+                    { xPlayerId: parseInt(userId) },
+                    { yPlayerId: parseInt(userId) }
+                ]
+            }
+        });
     }
 }

@@ -3,6 +3,7 @@ import { UserService } from "../services/userService";
 const jwt = require('jsonwebtoken');
 import dotenv from 'dotenv';
 import { UserRepository } from "../repositories/userRepository";
+import {GameRepository} from "../repositories/gameRepository";
 
 dotenv.config();
 
@@ -79,6 +80,6 @@ export class AuthController {
     }
 }
 
-const authController = new AuthController(new UserService(new UserRepository));
+const authController = new AuthController(new UserService(new UserRepository, new GameRepository()));
 
 export default authController;

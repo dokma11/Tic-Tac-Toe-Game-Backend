@@ -16,6 +16,8 @@ model User {
   gamesAsX  Game[] @relation("XPlayerGames")
   gamesAsY  Game[] @relation("YPlayerGames")
   madeMoves Move[] @relation("UserWhoPlayedTheMove")
+  gamesWon  Game[] @relation("WinnerGames")
+  gamesLost Game[] @relation("LoserGames")
 }
 
 model Game {
@@ -31,6 +33,10 @@ model Game {
   startedAt   DateTime?
   completedAt DateTime?
   moves       Move[]
+  winner      User?     @relation("WinnerGames", references: [id], fields: [winnerId])
+  winnerId    Int?
+  loser       User?     @relation("LoserGames", references: [id], fields: [loserId])
+  loserId     Int?
 }
 
 model Move {

@@ -1,6 +1,7 @@
 import { Request, Response, Router } from "express";
 import { UserService } from "../services/userService";
 import { UserRepository } from "../repositories/userRepository";
+import {GameRepository} from "../repositories/gameRepository";
 const jwt = require('jsonwebtoken');
 
 export class UserController {
@@ -47,6 +48,7 @@ export class UserController {
             const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
 
             const result = await this.service.getById(decoded.id.toString());
+            const statistics = await this.service.getProfileStatistics(decoded.id.toString());
 
             if(!result) {
                 console.log('Failed to retrieve the user by id: ' + decoded.id.toString());
@@ -54,7 +56,8 @@ export class UserController {
             }
 
             console.log('Successfully retrieved the user by id: ' + decoded.id.toString())
-            return res.status(200).send({firstName: result.firstName, lastName: result.lastName, email: result.email});
+            return res.status(200).send({firstName: result.firstName, lastName: result.lastName, email: result.email,
+                wins: statistics.wins, losses: statistics.losses, draws: statistics.draws, totalPlayed: statistics.totalPlayed });
         } catch (err) {
             console.log(err);
             console.log(err.message);
@@ -67,6 +70,6 @@ export class UserController {
     }
 }
 
-const userController = new UserController(new UserService(new UserRepository));
+const userController = new UserController(new UserService(new UserRepository, new GameRepository()));
 
 export default userController;

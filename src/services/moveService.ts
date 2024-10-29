@@ -187,16 +187,24 @@ export class MoveService {
                 const result = await this.gameRepository.finish(gameId);
 
                 if (!result) return false;
+
+                const game = await this.gameRepository.getByPublicId(gameId);
+
+                if (!game) return false;
+
+                // see if the winner is the x player
+                if (userId === game.xPlayerId.toString()) {
+                    const handleResult = await this.gameRepository.handleResult(gameId, parseInt(userId), game.yPlayerId);
+                    if (!handleResult) return false;
+                } else {
+                    const handleResult = await this.gameRepository.handleResult(gameId, parseInt(userId), game.xPlayerId);
+                    if (!handleResult) return false;
+                }
+
                 return true;
             }
         }
 
         return false;
     }
-
-    private async isGameDrawn(gameId: string) {
-        const allMoves = await this.moveRepository.getAllByGameId(gameId);
-
-    }
-
 }
