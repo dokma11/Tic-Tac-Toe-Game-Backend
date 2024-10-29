@@ -15,7 +15,7 @@ export class MoveService {
         player: string, moveIndex: string, gameOver: boolean}> {
         const coordinates = this.convertIndexToArray(moveIndex);
 
-        const game = await this.gameRepository.getByPublicId(gameId);545621183
+        const game = await this.gameRepository.getByPublicId(gameId);
 
         const newMove = {
             gameId: game.id,
@@ -49,6 +49,60 @@ export class MoveService {
         return await this.repository.getAllByUserId(userId);
     }
 
+    public async createComputerMove(gameId) {
+        console.log('moveService: create computer move')
+
+        const game = await this.gameRepository.getByPublicId(gameId);
+        const computerId = "-111";
+        const moveCoordinates = await this.chooseMove(game.id);
+        const moveIndex = this.convertArrayToIndex(moveCoordinates.xCoordinate, moveCoordinates.yCoordinate);
+
+        const newMove = {
+            gameId: game.id,
+            userId: parseInt(computerId),
+            xCoordinate: moveCoordinates.xCoordinate,
+            yCoordinate: moveCoordinates.yCoordinate,
+        }
+
+        const result = await this.repository.create(newMove);
+
+        console.log('kreiran novi potez');
+
+        // racunar ce uvek biti y igrac (O)
+        // ovaj deo bih mozda i mogao samo da izdvojim u fju - uraditi kasnije pri refaktorisanju
+        if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+
+        // after every move we check if the game is over
+        if (await this.isGameOver(gameId, computerId)) {
+            return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true };
+        }
+
+        return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false };
+    }
+
+    private async chooseMove(gameId) {
+        console.log('move service: choose move');
+
+        const madeMoves = await this.repository.getAllByGameId(gameId);
+
+        // initialize a new move
+        let newMove = {
+            xCoordinate: 1,
+            yCoordinate: 1,
+        };
+
+        // if the new move is already made, generate a new one
+        do {
+            newMove = {
+                xCoordinate: Math.floor(Math.random() * 3),
+                yCoordinate: Math.floor(Math.random() * 3)
+            };
+        }
+        while (madeMoves.some(pos => newMove.xCoordinate === pos.xCoordinate && newMove.yCoordinate === pos.yCoordinate));
+
+        return newMove;
+    }
+
     private convertIndexToArray(index) {
         switch(parseInt(index)) {
             case 0:
@@ -70,6 +124,19 @@ export class MoveService {
             case 8:
                 return [2, 2];
         }
+    }
+
+    private convertArrayToIndex(x: number, y: number): number | null {
+        if (x === 0 && y === 0) return 0;
+        if (x === 1 && y === 0) return 1;
+        if (x === 2 && y === 0) return 2;
+        if (x === 0 && y === 1) return 3;
+        if (x === 1 && y === 1) return 4;
+        if (x === 2 && y === 1) return 5;
+        if (x === 0 && y === 2) return 6;
+        if (x === 1 && y === 2) return 7;
+        if (x === 2 && y === 2) return 8;
+        return null;
     }
 
     private async isGameOver(gameId: string, userId: string) {

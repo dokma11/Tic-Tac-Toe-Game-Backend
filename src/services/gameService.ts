@@ -19,12 +19,16 @@ export class GameService {
             existingGame = await this.repository.getByPublicId(publicId.toString());
         } while (existingGame)
 
-        const game = {
+        let game = {
             publicId: publicId,
             xPlayerId: userId,
+            yPlayerId: undefined,
             status: 0,
             type: type,
         }
+
+        // if its single player add the computer "user"
+        if (type === '1') game.yPlayerId = -111;
 
         return await this.repository.create(game);
     }
