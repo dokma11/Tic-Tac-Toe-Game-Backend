@@ -8,7 +8,8 @@ export class Game {
     status: gameStatus;
     type: gameType;
     createdAt: Date;
-    completedAt: Date;
+    startedAt?: Date;
+    completedAt?: Date;
     winnerId?: number; // identifier of the user that has won the game
     loserId?: number; // identifier of the user that has lost the game
     moves?: Move[]; // all moves made during the game

@@ -4,5 +4,5 @@ export class Move {
     userId: number;
     xCoordinate: number;
     yCoordinate: number;
-    createdAt: Date;
+    createdAt?: Date;
 }

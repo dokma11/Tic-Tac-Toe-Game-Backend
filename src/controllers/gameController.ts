@@ -6,6 +6,7 @@ import dotenv from 'dotenv';
 import { WebSocketService } from "../config/webSocket";
 import { webSocketService } from "../app";
 
+// configure .env variables
 dotenv.config();
 
 export class GameController {
@@ -32,42 +33,29 @@ export class GameController {
     private async create(req: Request, res: Response) {
         console.log('Game controller: create')
 
-        const authHeader = req.headers.authorization;
-
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
 
         if (!req.body.type) return res.status(400).send('Game type must be defined');
 
-        const token = authHeader.split(' ')[1];
-        try {
-            const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
+        const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
+        if (!decoded) return res.status(401).send('Wrong jwt');
 
-            const result = await this.service.create(req.body.type, decoded.id.toString());
-
-            if(!result) {
-                console.log('Failed to create a new game!');
-                return res.status(500).send('Internal server error: Could not create a new game' );
-            }
-
-            console.log('Successfully created a new game')
-            return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type});
-        } catch (err) {
-            console.log(err);
-            console.log(err.message);
-            return res.status(403).json({ message: 'Invalid or expired token' });
+        const result = await this.service.create(req.body.type, decoded.id.toString());
+        if(!result) {
+            console.log('Failed to create a new game!');
+            return res.status(500).send('Internal server error: Could not create a new game' );
         }
+
+        console.log('Successfully created a new game')
+        return res.status(200).send({publicId: result.publicId, status: result.status, type: result.type});
     }
 
     private async getById(req: Request, res: Response) {
         console.log('Game controller: get by id')
 
-        if(!req.params.id) {
-            return res.status(400).send('Id must be provided');
-        }
+        if(!req.params.id) return res.status(400).send('Id must be provided');
 
         const result = await this.service.getById(req.params.id);
-        console.log('Result of get by id: ' + result);
-
         if (!result) {
             console.log('Failed to retrieve by id!');
             return res.status(500).send('Internal server error: Could not find the game by id: ' + req.params.id);
@@ -80,13 +68,9 @@ export class GameController {
     private async getByPublicId(req: Request, res: Response) {
         console.log('Game controller: get by public id')
 
-        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) {
-            return res.status(400).send('Invalid public id provided');
-        }
+        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) return res.status(400).send('Invalid public id provided');
 
         const result = await this.service.getByPublicId(req.params.publicId);
-        console.log('Result of get by public id: ' + result);
-
         if (!result) {
             console.log('Failed to retrieve by public id!');
             return res.status(500).send('Internal server error: Could not find the game by public id' );
@@ -99,15 +83,9 @@ export class GameController {
     private async getHistoryByPublicId(req: Request, res: Response) {
         console.log('Game controller: get history by public id')
 
-        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) {
-            return res.status(400).send('Invalid public id provided');
-        }
+        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) return res.status(400).send('Invalid public id provided');
 
         const result = await this.service.getHistoryByPublicId(req.params.publicId);
-
-        console.log('pokusaj contorller neki moves: ' + result.moves);
-        console.log('pokusaj controller neki public id: ' + result.publicId);
-
         if (!result) {
             console.log('Failed to retrieve by public id!');
             return res.status(500).send('Internal server error: Could not find the game by public id' );
@@ -119,67 +97,67 @@ export class GameController {
     }
 
     private async join(req: Request, res: Response) {
-        const authHeader = req.headers.authorization;
+        console.log('Game controller: join')
+
+        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
 
         if (!req.params.publicId) return res.status(400).send('Public id of the game must be provided');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+        const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
+        if (!decoded) return res.status(401).send('Wrong jwt');
 
-        const token = authHeader.split(' ')[1];
-        try {
-            console.log('Game controller: join');
-
-            const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
-
-            const result = await this.service.join(req.params.publicId, decoded.id.toString());
-
-            if (!result) {
-                console.log('Failed to join the game with public id: ' + req.params.publicId);
-                return res.status(500).send('Internal server error: Could not join the game by public id' + req.params.publicId);
-            }
-
-            console.log('Successfully joined the game with public id: ' + req.params.publicId);
-            this.webSocketService.broadcastMessage('join request for game with public id: ' + req.params.publicId);
-            return res.status(200).send();
-        } catch (err) {
-            console.log(err);
-            console.log(err.message);
-            return res.status(403).json({ message: 'Invalid or expired token' });
+        const result = await this.service.join(req.params.publicId, decoded.id.toString());
+        if (!result) {
+            console.log('Failed to join the game with public id: ' + req.params.publicId);
+            return res.status(500).send('Internal server error: Could not join the game by public id' + req.params.publicId);
         }
+
+        console.log('Successfully joined the game with public id: ' + req.params.publicId);
+        this.webSocketService.broadcastMessage('join request for game with public id: ' + req.params.publicId);
+        return res.status(200).send();
     }
 
     private async cancel(req: Request, res: Response) {
         console.log('Game controller: cancel');
-        const authHeader = req.headers.authorization;
+
+        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
 
         if (!req.params.publicId) return res.status(400).send('Public id of the game must be provided');
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+        const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
+        if (!decoded) return res.status(401).send('Wrong jwt');
 
-        const token = authHeader.split(' ')[1];
+        const result = await this.service.cancel(req.params.publicId, decoded.id.toString());
+        if (!result) {
+            console.log('Failed to cancel the game with public id: ' + req.params.publicId);
+            return res.status(500).send('Internal server error: Could not cancel the game by public id' + req.params.publicId);
+        }
+
+        console.log('Successfully cancelled the game with public id: ' + req.params.publicId);
+        return res.status(200).send();
+    }
+
+    private checkAuthHeader(authHeader: string) {
+        console.log('authHeader')
+        console.log(authHeader)
+        return (!authHeader || !authHeader.startsWith('Bearer '))
+    }
+
+    private verifyToken(token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
-
-            const result = await this.service.cancel(req.params.publicId, decoded.id.toString());
-
-            if (!result) {
-                console.log('Failed to cancel the game with public id: ' + req.params.publicId);
-                return res.status(500).send('Internal server error: Could not cancel the game by public id' + req.params.publicId);
-            }
-
-            console.log('Successfully cancelled the game with public id: ' + req.params.publicId);
-            return res.status(200).send();
+            console.log('token');
+            console.log(token);
+            return jwt.verify(token, process.env.JWT as string) as { id: number };
         } catch (err) {
             console.log(err);
             console.log(err.message);
-            return res.status(403).json({ message: 'Invalid or expired token' });
+            return null;
         }
     }
 
     public getRouter(): Router {
         return this.router;
     }
-
 }
 
 const gameController = new GameController(new GameService(new GameRepository), webSocketService);

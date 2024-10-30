@@ -1,6 +1,6 @@
-import { IMoveRepository } from "../repositories/interfaces/iMoveRepository";
-import { Move } from "../models/move";
-import { IGameRepository } from "../repositories/interfaces/iGameRepository";
+import {IMoveRepository} from "../repositories/interfaces/iMoveRepository";
+import {Move} from "../models/move";
+import {IGameRepository} from "../repositories/interfaces/iGameRepository";
 
 export class MoveService {
     private repository: IMoveRepository;
@@ -13,9 +13,11 @@ export class MoveService {
 
     public async create(moveIndex: string, gameId: string, userId: string): Promise<{success: boolean, move: Move,
         player: string, moveIndex: string, gameOver: boolean, draw: boolean}> {
+        console.log('Game service: create');
         const coordinates = this.convertIndexToArray(moveIndex);
 
         const game = await this.gameRepository.getByPublicId(gameId);
+        if(!game) return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
 
         const newMove = {
             gameId: game.id,
@@ -25,22 +27,18 @@ export class MoveService {
         }
 
         const result = await this.repository.create(newMove);
-
         if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
 
-        // after every move we check if the game is over
+        // after every move we check if the game is over (win or loss)
         if (await this.isGameOver(gameId, userId)) {
             if (game.xPlayerId === parseInt(userId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: false };
             return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true, draw: false };
         }
 
-        const allMoves = await this.repository.getAllByGamePublicId(gameId);
-        if (allMoves.length === 9) {
-            console.log('The game is a draw!');
-            await this.gameRepository.finish(gameId);
-            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: true };
-        }
+        // after every move we check if the game is a draw
+        if (await this.isGameADraw(gameId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: true };
 
+        // check which player has played the move
         if (game.xPlayerId === parseInt(userId)) {
             return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: false, draw: false };
         }
@@ -49,10 +47,12 @@ export class MoveService {
     }
 
     public async getAllByGameId(gameId: string): Promise<Move[]> {
+        console.log('Game service: get all by game id');
         return await this.repository.getAllByGameId(gameId);
     }
 
     public async getAllByUserId(userId: string): Promise<Move[]> {
+        console.log('Game service: get all by user id');
         return await this.repository.getAllByUserId(userId);
     }
 
@@ -60,15 +60,10 @@ export class MoveService {
         console.log('moveService: create computer move')
 
         const game = await this.gameRepository.getByPublicId(gameId);
+        if(!game) return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+
+        // id of the "computer user"
         const computerId = "-111";
-
-        const allMoves = await this.repository.getAllByGamePublicId(gameId);
-        if (allMoves.length === 9) {
-            console.log('The computer has no left moves to make.');
-            await this.gameRepository.finish(gameId);
-            return { success: true, move: 'none', player: 'none', moveIndex: '-1', gameOver: true };
-        }
-
         const moveCoordinates = await this.chooseMove(game.id);
         const moveIndex = this.convertArrayToIndex(moveCoordinates.xCoordinate, moveCoordinates.yCoordinate);
 
@@ -82,7 +77,6 @@ export class MoveService {
         const result = await this.repository.create(newMove);
 
         // racunar ce uvek biti y igrac (O)
-        // ovaj deo bih mozda i mogao samo da izdvojim u fju - uraditi kasnije pri refaktorisanju
         if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
 
         // after every move we check if the game is over
@@ -122,6 +116,8 @@ export class MoveService {
     }
 
     private convertIndexToArray(index) {
+        console.log('Game service: convert index to array');
+
         switch(parseInt(index)) {
             case 0:
                 return [0, 0];
@@ -145,6 +141,8 @@ export class MoveService {
     }
 
     private convertArrayToIndex(x: number, y: number): number | null {
+        console.log('Game service: convert array to index');
+
         if (x === 0 && y === 0) return 0;
         if (x === 1 && y === 0) return 1;
         if (x === 2 && y === 0) return 2;
@@ -158,9 +156,10 @@ export class MoveService {
     }
 
     private async isGameOver(gameId: string, userId: string) {
-        const userMoves = await this.repository.getAllByUserAndGameId(userId, gameId);
+        console.log('Game service: is game over');
 
         // user must have at least three moves made so he/she could win
+        const userMoves = await this.repository.getAllByUserAndGameId(userId, gameId);
         if (userMoves.length < 3) return false;
 
         const winningCombinations = [
@@ -184,27 +183,33 @@ export class MoveService {
 
             if (hasWinningCombination) {
                 console.log(`Player ${userId} has won the game!`);
-                const result = await this.gameRepository.finish(gameId);
 
+                const result = await this.gameRepository.finish(gameId);
                 if (!result) return false;
 
                 const game = await this.gameRepository.getByPublicId(gameId);
-
                 if (!game) return false;
 
                 // see if the winner is the x player
                 if (userId === game.xPlayerId.toString()) {
-                    const handleResult = await this.gameRepository.handleResult(gameId, parseInt(userId), game.yPlayerId);
-                    if (!handleResult) return false;
-                } else {
-                    const handleResult = await this.gameRepository.handleResult(gameId, parseInt(userId), game.xPlayerId);
-                    if (!handleResult) return false;
+                    return await this.gameRepository.handleResult(gameId, parseInt(userId), game.yPlayerId);
                 }
 
-                return true;
+                return await this.gameRepository.handleResult(gameId, parseInt(userId), game.xPlayerId);
             }
         }
 
         return false;
+    }
+
+    private async isGameADraw(gameId: string) {
+        console.log('Game service: is game a draw');
+
+        const allMoves = await this.repository.getAllByGamePublicId(gameId);
+        if (allMoves.length !== 9) return false;
+
+        console.log('The game is a draw!');
+        await this.gameRepository.finish(gameId);
+        return true
     }
 }

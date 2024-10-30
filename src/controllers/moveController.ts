@@ -27,7 +27,6 @@ export class MoveController {
         }
 
         const messageParts = message.toString().split(';');
-
         if (messageParts.length != 3) {
             console.log('Message has wrong length');
             return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false, draw: false };
@@ -41,7 +40,6 @@ export class MoveController {
             const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
 
             const result = await this.service.create(moveIndex, gameId, decoded.id.toString());
-
             if (!result.success) {
                 console.log('Failed to create the move for the game with id: ' + gameId);
                 return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false, draw: false };
@@ -62,7 +60,6 @@ export class MoveController {
         if (!req.params.gameId) return res.status(400).send('Game id must be provided');
 
         const result = await this.service.getAllByGameId(req.params.gameId);
-
         if (!result) {
             console.log('Failed to retrieve moves by game id: ' + req.params.gameId);
             return res.status(500).send('Game id must be provided');
@@ -78,7 +75,6 @@ export class MoveController {
         if (!req.params.userId) return res.status(400).send('User id must be provided');
 
         const result = await this.service.getAllByUserId(req.params.userId);
-
         if (!result) {
             console.log('Failed to retrieve moves by user id: ' + req.params.userId);
             return res.status(500).send('User id must be provided');
@@ -97,24 +93,19 @@ export class MoveController {
         }
 
         const messageParts = message.toString().split(';');
-
         if (messageParts.length != 3) {
             console.log('Message has wrong length');
             return { success: false, gameId: '', player: '', moveIndex: '', gameOver: false };
         }
-
-        const moveIndex =  messageParts[0].split(':')[1];
         const gameId = messageParts[1];
 
         const result = await this.service.createComputerMove(gameId);
-
         if (!result.success) {
             console.log('Failed to create the computer move for the game with id: ' + gameId);
             return { success: false, gameId: gameId, player: '', moveIndex: '', gameOver: false };
         }
 
         console.log('Successfully created the computer move for the game with id: ' + gameId);
-        console.log('game over: ' + result.gameOver);
         return { success: result.success, gameId: gameId, player: result.player, moveIndex: result.moveIndex, gameOver: result.gameOver };
     }
 

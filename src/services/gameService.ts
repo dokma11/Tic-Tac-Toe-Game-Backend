@@ -11,7 +11,7 @@ export class GameService {
     public async create(type: string, userId: string) {
         console.log('Game service: create');
 
-        // make sure the randomized public id doesn't already exist
+        // game's public id is randomized so we need to make sure it doesn't already exist in the database
         let publicId: number;
         let existingGame: any;
         do {
@@ -31,7 +31,7 @@ export class GameService {
         if (type === '1') {
             game.yPlayerId = -111;
             await this.repository.create(game);
-            await this.repository.start(game.publicId.toString(), game.yPlayerId);
+            return await this.repository.start(game.publicId.toString(), game.yPlayerId);
         }
 
         return await this.repository.create(game);
@@ -49,19 +49,16 @@ export class GameService {
 
     public async getHistoryByPublicId(publicId: string) {
         console.log('Game service: get history by public id: ' + publicId);
-        const result = await this.repository.getWithMovesByPublicId(publicId);
-
-        console.log('pokusaj neki moves: ' + result.moves);
-        console.log('pokusaj neki public id: ' + result.publicId);
-
-        return result;
+        return await this.repository.getWithMovesByPublicId(publicId);
     }
 
-    public async join(publicId: string, id: string) {
-        return await this.repository.start(publicId, id);
+    public async join(publicId: string, userId: string) {
+        console.log('Game service: join the game with public id: ' + publicId + ' by a user with id: ' + userId);
+        return await this.repository.start(publicId, userId);
     }
 
     public async cancel(publicId: string, userId: string) {
+        console.log('Game service: cancel the game with public id: ' + publicId + ' by a user with id: ' + userId);
         const game = await this.repository.getByPublicId(publicId);
 
         // only the games creator (x player) can cancel the game

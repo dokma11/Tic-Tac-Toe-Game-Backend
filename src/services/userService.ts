@@ -25,6 +25,7 @@ export class UserService {
     public async login(reqBody) {
         console.log('User service: login')
         const user = await this.repository.getByEmail(reqBody.email);
+        if (!user) return { success: false, user: null }
 
         const isPasswordValid = await bcrypt.compare(reqBody.password, user.password)
         if (!isPasswordValid) return { success: false, id: -1 };

@@ -21,13 +21,9 @@ export class UserController {
     private async getByEmail(req: Request, res: Response) {
         console.log('User controller: get by email')
 
-        if (!req.params.email) {
-            return res.status(400).send('The email must be provided');
-        }
+        if (!req.params.email) return res.status(400).send('The email must be provided');
 
         const result = await this.service.getByEmail(req.params.email);
-        console.log('Result of get by email: ' + result);
-
         if (!result) {
             console.log('Failed to retrieve by email!');
             return res.status(500).send('Internal server error: Could not find the user');
@@ -40,16 +36,11 @@ export class UserController {
     private async getById(req: Request, res: Response) {
         console.log('User controller: get by id')
 
-        const authHeader = req.headers.authorization;
+        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
-
-        if (!req.params.id) {
-            return res.status(400).send('The user id must be provided');
-        }
+        if (!req.params.id) return res.status(400).send('The user id must be provided');
 
         const result = await this.service.getById(req.params.id);
-
         if (!result) {
             console.log('Failed to retrieve by id!');
             return res.status(500).send('Internal server error: Could not find the user');
@@ -62,29 +53,36 @@ export class UserController {
     private async getProfile(req: Request, res: Response) {
         console.log('User controller: get profile')
 
-        const authHeader = req.headers.authorization;
+        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
 
-        if (!authHeader || !authHeader.startsWith('Bearer ')) return res.status(401).json({message: 'Authorization token not found'});
+        const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
+        if (!decoded) return res.status(401).send('Wrong jwt');
 
-        const token = authHeader.split(' ')[1];
+        const statistics = await this.service.getProfileStatistics(decoded.id.toString());
+        if (!statistics) return res.status(500).send('Internal server error: Could not retrieve profile statistics for user with id: ' + decoded.id.toString());
+
+        const result = await this.service.getById(decoded.id.toString());
+        if(!result) {
+            console.log('Failed to retrieve the user by id: ' + decoded.id.toString());
+            return res.status(500).send('Internal server error: Could not retrieve the user by id: ' + decoded.id.toString());
+        }
+
+        console.log('Successfully retrieved the user by id: ' + decoded.id.toString())
+        return res.status(200).send({firstName: result.firstName, lastName: result.lastName, email: result.email,
+            wins: statistics.wins, losses: statistics.losses, draws: statistics.draws, totalPlayed: statistics.totalPlayed });
+    }
+
+    private checkAuthHeader(authHeader: string) {
+        return (!authHeader || !authHeader.startsWith('Bearer '))
+    }
+
+    private verifyToken(token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT as string) as { id: number };
-
-            const result = await this.service.getById(decoded.id.toString());
-            const statistics = await this.service.getProfileStatistics(decoded.id.toString());
-
-            if(!result) {
-                console.log('Failed to retrieve the user by id: ' + decoded.id.toString());
-                return res.status(500).send('Internal server error: Could not retrieve the user by id: ' + decoded.id.toString());
-            }
-
-            console.log('Successfully retrieved the user by id: ' + decoded.id.toString())
-            return res.status(200).send({firstName: result.firstName, lastName: result.lastName, email: result.email,
-                wins: statistics.wins, losses: statistics.losses, draws: statistics.draws, totalPlayed: statistics.totalPlayed });
+            return jwt.verify(token, process.env.JWT as string) as { id: number };
         } catch (err) {
             console.log(err);
             console.log(err.message);
-            return res.status(403).json({ message: 'Invalid or expired token' });
+            return null;
         }
     }
 

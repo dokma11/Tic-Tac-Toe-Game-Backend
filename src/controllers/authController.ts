@@ -1,10 +1,11 @@
-import { Router, Request, Response, NextFunction } from "express";
+import { Router, Request, Response } from "express";
 import { UserService } from "../services/userService";
 const jwt = require('jsonwebtoken');
 import dotenv from 'dotenv';
 import { UserRepository } from "../repositories/userRepository";
-import {GameRepository} from "../repositories/gameRepository";
+import { GameRepository } from "../repositories/gameRepository";
 
+// configure .env variables
 dotenv.config();
 
 export class AuthController {
@@ -21,7 +22,7 @@ export class AuthController {
     }
 
     private async login(req: Request, res: Response) {
-        console.log('Auth controller: login')
+        console.log('Auth controller: login');
 
         if (!this.validate(req.body.email, req.body.password)) {
             console.log('Auth controller: invalid email and password combination');
@@ -35,12 +36,12 @@ export class AuthController {
         }
 
         console.log('Successfully logged in  with those credentials!');
-        const token = jwt.sign({ id: result.id }, process.env.JWT as string) // mozda ovde da dodam neki mejl ili slicno, zavisi sta mi treba na frontu
+        const token = jwt.sign({ id: result.id }, process.env.JWT as string);
         return res.send(token);
     }
 
     private async register(req: Request, res: Response) {
-        console.log('Auth controller: register')
+        console.log('Auth controller: register');
 
         if (!this.validate(req.body.email, req.body.password)) {
             console.log('Auth controller: invalid email and password combination');
@@ -48,18 +49,16 @@ export class AuthController {
         }
 
         const result = await this.service.create(req.body);
-
         if(!result.success) {
             console.log('Failed to register a new user!');
             return res.status(400).send('A user with this email already exists');
         }
 
         console.log('Successfully registered a new user!');
-        const token = jwt.sign({ id: result.user.id }, process.env.JWT as string); // mozda ovde da dodam neki mejl ili slicno, zavisi sta mi treba na frontu
+        const token = jwt.sign({ id: result.user.id }, process.env.JWT as string);
         return res.header('x-auth-token', token).send({ firstName: result.user.firstName, lastName: result.user.lastName, email: result.user.email });
     }
 
-    // mozda izdvojiti posebno za registraciju i takodje pitanje da li da validacija bude u kontroleru ili da bude u servisu
     private validate(email: string, password: string): boolean {
         const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
         if(!email || !email.match(emailRegex)) {
