@@ -36,26 +36,21 @@ export class WebSocketService {
                     console.log('Single player move called');
                     // user made move
                     const result = await this.moveController.handleWebSocketMessage(message);
+                    if (result.success && result.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';x;'
+                        + result.moveIndex + ';' + result.gameOver + ';' + '' + ';' + result.draw);
 
                     // now create a computer move
                     const computerResult = await this.moveController.computerMove(message);
+                    if (result.success && result.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';y;'
+                        + result.moveIndex + ';' + computerResult.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
 
-                    if(result.success && computerResult.success) {
-                        if (result.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';x;'
-                            + result.moveIndex + ';' + result.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
-
-                        if (computerResult.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';y;'
-                            + result.moveIndex + ';' + computerResult.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
-
-                        return this.broadcastMessage('single-player-move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';'
-                            + result.gameOver.toString() + ';' + computerResult.moveIndex);
-                    }
+                    return this.broadcastMessage('single-player-move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';'
+                        + result.gameOver.toString() + ';' + computerResult.moveIndex);
                 } else {
                     this.clients.set(message.toString(), ws);
                     return console.log('Broj klijenata (nakon dodavanja): ' + this.clients.size);
                 }
             });
-
             ws.on("close", () => {
                 console.log("WebSocket connection closed");
                 for (const [key, clientWs] of this.clients.entries()) {

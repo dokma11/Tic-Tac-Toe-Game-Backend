@@ -28,6 +28,7 @@ export class GameController {
         this.router.put("/join/:publicId", this.join.bind(this));
         this.router.put("/cancel/:publicId", this.cancel.bind(this));
         this.router.get("/history/:publicId", this.getHistoryByPublicId.bind(this));
+        this.router.get("/finished", this.getAllFinishedByPlayerId.bind(this));
     }
 
     private async create(req: Request, res: Response) {
@@ -135,6 +136,24 @@ export class GameController {
 
         console.log('Successfully cancelled the game with public id: ' + req.params.publicId);
         return res.status(200).send();
+    }
+
+    private async getAllFinishedByPlayerId(req: Request, res: Response) {
+        console.log('Game controller: get all finished by player id');
+
+        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
+
+        const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
+        if (!decoded) return res.status(401).send('Wrong jwt');
+
+        const result = await this.service.getAllFinishedByPlayerId(decoded.id.toString());
+        if (!result) {
+            console.log('Failed to retrieve all the finished games with player id: ' + decoded.id.toString());
+            return res.status(500).send('Internal server error: Could not retrieve all the games by player id' + decoded.id.toString());
+        }
+
+        console.log('Successfully retrieved all the games with player id: ' + decoded.id.toString());
+        return res.status(200).send(result);
     }
 
     private checkAuthHeader(authHeader: string) {

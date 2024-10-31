@@ -12,4 +12,5 @@ export interface IGameRepository {
     getAllByLoserId(userId: string): Promise<Game[]>;
     getAllByPlayerId(userId: string): Promise<Game[]>;
     getWithMovesByPublicId(publicId: string);
+    getAllFinishedWithMovesByPlayerId(userId: string): Promise<Game[]>;
 }

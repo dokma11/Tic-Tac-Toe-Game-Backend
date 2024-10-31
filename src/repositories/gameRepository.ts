@@ -130,7 +130,8 @@ export class GameRepository implements IGameRepository {
         return handleDbOperation(
             () => prisma.game.findMany({
                 where: {
-                    winnerId: parseInt(userId)
+                    winnerId: parseInt(userId),
+                    status: 2
                 }
             }),
             'Could not get all the games by the winner id'
@@ -142,7 +143,8 @@ export class GameRepository implements IGameRepository {
         return handleDbOperation(
             () => prisma.game.findMany({
                 where: {
-                    loserId: parseInt(userId)
+                    loserId: parseInt(userId),
+                    status: 2
                 }
             }),
             'Could not get all the games by the loser id'
@@ -157,10 +159,32 @@ export class GameRepository implements IGameRepository {
                     OR: [
                         { xPlayerId: parseInt(userId) },
                         { yPlayerId: parseInt(userId) }
-                    ]
+                    ],
+                    status: 2
                 }
             }),
             'Could not get all games by player id',
+        );
+    }
+
+    public async getAllFinishedWithMovesByPlayerId(userId: string): Promise<Game[]> {
+        console.log(`Game repository: get all finished with moves by player id: ${userId}`);
+        return handleDbOperation(
+            () => prisma.game.findMany({
+                where: {
+                    OR: [
+                        { xPlayerId: parseInt(userId) },
+                        { yPlayerId: parseInt(userId) }
+                    ],
+                    status: 2
+                },
+                include: {
+                    moves: true,
+                    xPlayer: true,
+                    yPlayer: true
+                }
+            }),
+            'Could not get all finished games with moves by player id',
         );
     }
 }

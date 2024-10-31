@@ -27,8 +27,7 @@ export class GameService {
             type: type,
         }
 
-        // if its single player add the computer "user"
-        if (type === '1') {
+        if (type == '1') {
             game.yPlayerId = -111;
             await this.repository.create(game);
             return await this.repository.start(game.publicId.toString(), game.yPlayerId);
@@ -55,6 +54,11 @@ export class GameService {
     public async join(publicId: string, userId: string) {
         console.log('Game service: join the game with public id: ' + publicId + ' by a user with id: ' + userId);
         return await this.repository.start(publicId, userId);
+    }
+
+    public async getAllFinishedByPlayerId(playerId: string) {
+        console.log('Game service: get all finished by player id: ' + playerId);
+        return await this.repository.getAllFinishedWithMovesByPlayerId(playerId);
     }
 
     public async cancel(publicId: string, userId: string) {
