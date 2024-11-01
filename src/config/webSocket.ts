@@ -22,34 +22,7 @@ export class WebSocketService {
             ws.on("message", async (message) => {
                 console.log("Received:", message.toString());
                 console.log('Broj klijenata: ' + this.clients.size);
-
-                if(message.toString().includes('move')) {
-                    console.log('Move called');
-                    const result = await this.moveController.handleWebSocketMessage(message);
-
-                    if(result.success && result.gameOver) return this.broadcastMessage('finish;' + result.gameId + ';' + result.player + ';'
-                        + result.moveIndex + ';' + result.draw);
-
-                    if(result.success) return this.broadcastMessage('move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';'
-                        + result.gameOver.toString() + ';' + result.draw);
-                } else if(message.toString().includes('single-player')) {
-                    console.log('Single player move called');
-                    // user made move
-                    const result = await this.moveController.handleWebSocketMessage(message);
-                    if (result.success && result.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';x;'
-                        + result.moveIndex + ';' + result.gameOver + ';' + '' + ';' + result.draw);
-
-                    // now create a computer move
-                    const computerResult = await this.moveController.computerMove(message);
-                    if (result.success && result.gameOver) return this.broadcastMessage('single-player-finish;' + result.gameId + ';y;'
-                        + result.moveIndex + ';' + computerResult.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
-
-                    return this.broadcastMessage('single-player-move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';'
-                        + result.gameOver.toString() + ';' + computerResult.moveIndex);
-                } else {
-                    this.clients.set(message.toString(), ws);
-                    return console.log('Broj klijenata (nakon dodavanja): ' + this.clients.size);
-                }
+                return await this.handleMessage(message, ws);
             });
             ws.on("close", () => {
                 console.log("WebSocket connection closed");
@@ -61,6 +34,50 @@ export class WebSocketService {
                 }
             });
         });
+    }
+
+    private async handleMessage(message, ws) {
+        if(message.toString().includes('move')) {
+            console.log('Move called');
+            return await this.handleMoveMessage(message);
+        } else if(message.toString().includes('single-player')) {
+            console.log('Single player move called');
+            return await this.handleSinglePlayerMoveMessage(message);
+        } else {
+            this.clients.set(message.toString(), ws);
+            return console.log('Broj klijenata (nakon dodavanja): ' + this.clients.size);
+        }
+    }
+
+    private async handleMoveMessage(message) {
+        const result = await this.moveController.handleWebSocketMessage(message);
+
+        if(result.success && result.gameOver) {
+            return this.broadcastMessage('finish;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.draw);
+        }
+
+        if(result.success) {
+            return this.broadcastMessage('move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.gameOver.toString() + ';' + result.draw);
+        }
+    }
+
+    private async handleSinglePlayerMoveMessage(message) {
+        // user made move
+        const result = await this.moveController.handleWebSocketMessage(message);
+        if (result.success && result.gameOver) {
+            return this.broadcastMessage('single-player-finish;' + result.gameId + ';x;' + result.moveIndex +
+                ';' + result.gameOver + ';' + '' + ';' + result.draw);
+        }
+
+        // now create a computer move
+        const computerResult = await this.moveController.computerMove(message);
+        if (result.success && result.gameOver) {
+            return this.broadcastMessage('single-player-finish;' + result.gameId + ';y;' + result.moveIndex + ';' +
+                computerResult.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
+        }
+
+        return this.broadcastMessage('single-player-move;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';'
+            + result.gameOver.toString() + ';' + computerResult.moveIndex);
     }
 
     public sendMessageToClient(playerId: string, message: string) {

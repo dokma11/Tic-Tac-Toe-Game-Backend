@@ -21,7 +21,9 @@ export class UserController {
     private async getByEmail(req: Request, res: Response) {
         console.log('User controller: get by email')
 
-        if (!req.params.email) return res.status(400).send('The email must be provided');
+        if (!req.params.email) {
+            return res.status(400).send('The email must be provided');
+        }
 
         const result = await this.service.getByEmail(req.params.email);
         if (!result) {
@@ -36,9 +38,13 @@ export class UserController {
     private async getById(req: Request, res: Response) {
         console.log('User controller: get by id')
 
-        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
+        if (this.checkAuthHeader(req.headers.authorization)) {
+            return res.status(401).json({message: 'Authorization token not found'});
+        }
 
-        if (!req.params.id) return res.status(400).send('The user id must be provided');
+        if (!req.params.id) {
+            return res.status(400).send('The user id must be provided');
+        }
 
         const result = await this.service.getById(req.params.id);
         if (!result) {
@@ -53,13 +59,19 @@ export class UserController {
     private async getProfile(req: Request, res: Response) {
         console.log('User controller: get profile')
 
-        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
+        if (this.checkAuthHeader(req.headers.authorization)) {
+            return res.status(401).json({message: 'Authorization token not found'});
+        }
 
         const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
-        if (!decoded) return res.status(401).send('Wrong jwt');
+        if (!decoded) {
+            return res.status(401).send('Wrong jwt');
+        }
 
         const statistics = await this.service.getProfileStatistics(decoded.id.toString());
-        if (!statistics) return res.status(500).send('Internal server error: Could not retrieve profile statistics for user with id: ' + decoded.id.toString());
+        if (!statistics) {
+            return res.status(500).send('Internal server error: Could not retrieve profile statistics for user with id: ' + decoded.id.toString());
+        }
 
         const result = await this.service.getById(decoded.id.toString());
         if(!result) {

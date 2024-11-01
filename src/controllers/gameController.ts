@@ -34,12 +34,18 @@ export class GameController {
     private async create(req: Request, res: Response) {
         console.log('Game controller: create')
 
-        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
+        if (this.checkAuthHeader(req.headers.authorization)) {
+            return res.status(401).json({message: 'Authorization token not found'});
+        }
 
-        if (!req.body.type) return res.status(400).send('Game type must be defined');
+        if (!req.body.type) {
+            return res.status(400).send('Game type must be defined');
+        }
 
         const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
-        if (!decoded) return res.status(401).send('Wrong jwt');
+        if (!decoded) {
+            return res.status(401).send('Wrong jwt');
+        }
 
         const result = await this.service.create(req.body.type, decoded.id.toString());
         if(!result) {
@@ -54,7 +60,9 @@ export class GameController {
     private async getById(req: Request, res: Response) {
         console.log('Game controller: get by id')
 
-        if(!req.params.id) return res.status(400).send('Id must be provided');
+        if(!req.params.id) {
+            return res.status(400).send('Id must be provided');
+        }
 
         const result = await this.service.getById(req.params.id);
         if (!result) {
@@ -69,7 +77,9 @@ export class GameController {
     private async getByPublicId(req: Request, res: Response) {
         console.log('Game controller: get by public id')
 
-        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) return res.status(400).send('Invalid public id provided');
+        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId))  {
+            return res.status(400).send('Invalid public id provided');
+        }
 
         const result = await this.service.getByPublicId(req.params.publicId);
         if (!result) {
@@ -84,7 +94,9 @@ export class GameController {
     private async getHistoryByPublicId(req: Request, res: Response) {
         console.log('Game controller: get history by public id')
 
-        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) return res.status(400).send('Invalid public id provided');
+        if(!req.params.publicId || req.params.publicId.length != 9 || !parseInt(req.params.publicId)) {
+            return res.status(400).send('Invalid public id provided');
+        }
 
         const result = await this.service.getHistoryByPublicId(req.params.publicId);
         if (!result) {
@@ -100,12 +112,18 @@ export class GameController {
     private async join(req: Request, res: Response) {
         console.log('Game controller: join')
 
-        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
+        if (this.checkAuthHeader(req.headers.authorization)) {
+            return res.status(401).json({message: 'Authorization token not found'});
+        }
 
-        if (!req.params.publicId) return res.status(400).send('Public id of the game must be provided');
+        if (!req.params.publicId) {
+            return res.status(400).send('Public id of the game must be provided');
+        }
 
         const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
-        if (!decoded) return res.status(401).send('Wrong jwt');
+        if (!decoded) {
+            return res.status(401).send('Wrong jwt');
+        }
 
         const result = await this.service.join(req.params.publicId, decoded.id.toString());
         if (!result) {
@@ -121,12 +139,18 @@ export class GameController {
     private async cancel(req: Request, res: Response) {
         console.log('Game controller: cancel');
 
-        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
+        if (this.checkAuthHeader(req.headers.authorization)) {
+            return res.status(401).json({message: 'Authorization token not found'});
+        }
 
-        if (!req.params.publicId) return res.status(400).send('Public id of the game must be provided');
+        if (!req.params.publicId) {
+            return res.status(400).send('Public id of the game must be provided');
+        }
 
         const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
-        if (!decoded) return res.status(401).send('Wrong jwt');
+        if (!decoded) {
+            return res.status(401).send('Wrong jwt');
+        }
 
         const result = await this.service.cancel(req.params.publicId, decoded.id.toString());
         if (!result) {
@@ -141,10 +165,14 @@ export class GameController {
     private async getAllFinishedByPlayerId(req: Request, res: Response) {
         console.log('Game controller: get all finished by player id');
 
-        if (this.checkAuthHeader(req.headers.authorization)) return res.status(401).json({message: 'Authorization token not found'});
+        if (this.checkAuthHeader(req.headers.authorization)) {
+            return res.status(401).json({message: 'Authorization token not found'});
+        }
 
         const decoded = this.verifyToken(req.headers.authorization.split(' ')[1]);
-        if (!decoded) return res.status(401).send('Wrong jwt');
+        if (!decoded) {
+            return res.status(401).send('Wrong jwt');
+        }
 
         const result = await this.service.getAllFinishedByPlayerId(decoded.id.toString());
         if (!result) {

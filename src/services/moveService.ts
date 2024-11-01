@@ -1,6 +1,6 @@
-import {IMoveRepository} from "../repositories/interfaces/iMoveRepository";
-import {Move} from "../models/move";
-import {IGameRepository} from "../repositories/interfaces/iGameRepository";
+import { IMoveRepository } from "../repositories/interfaces/iMoveRepository";
+import { Move } from "../models/move";
+import { IGameRepository } from "../repositories/interfaces/iGameRepository";
 
 export class MoveService {
     private repository: IMoveRepository;
@@ -17,7 +17,9 @@ export class MoveService {
         const coordinates = this.convertIndexToArray(moveIndex);
 
         const game = await this.gameRepository.getByPublicId(gameId);
-        if(!game) return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
+        if(!game) {
+            return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
+        }
 
         const newMove = {
             gameId: game.id,
@@ -27,23 +29,11 @@ export class MoveService {
         }
 
         const result = await this.repository.create(newMove);
-        if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
-
-        // after every move we check if the game is over (win or loss)
-        if (await this.isGameOver(gameId, userId)) {
-            if (game.xPlayerId === parseInt(userId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: false };
-            return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true, draw: false };
+        if(!result) {
+            return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
         }
 
-        // after every move we check if the game is a draw
-        if (await this.isGameADraw(gameId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: true };
-
-        // check which player has played the move
-        if (game.xPlayerId === parseInt(userId)) {
-            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: false, draw: false };
-        }
-
-        return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false, draw: false };
+        return await this.handleNecessaryChecks(game, gameId, userId, result, moveIndex);
     }
 
     public async getAllByGameId(gameId: string): Promise<Move[]> {
@@ -60,7 +50,9 @@ export class MoveService {
         console.log('moveService: create computer move')
 
         const game = await this.gameRepository.getByPublicId(gameId);
-        if(!game) return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+        if(!game) {
+            return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+        }
 
         // id of the "computer user"
         const computerId = "-111";
@@ -77,7 +69,9 @@ export class MoveService {
         const result = await this.repository.create(newMove);
 
         // racunar ce uvek biti y igrac (O)
-        if(!result) return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+        if(!result) {
+            return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+        }
 
         // after every move we check if the game is over
         if (await this.isGameOver(gameId, computerId)) {
@@ -176,6 +170,10 @@ export class MoveService {
             [{ x: 0, y: 2 }, { x: 1, y: 1 }, { x: 2, y: 0 }],
         ];
 
+        return await this.checkWinningCombination(winningCombinations, userMoves, userId, gameId);
+    }
+
+    private async checkWinningCombination(winningCombinations, userMoves, userId, gameId) {
         for (const combination of winningCombinations) {
             const hasWinningCombination = combination.every(pos =>
                 userMoves.some(move => move.xCoordinate === pos.x && move.yCoordinate === pos.y)
@@ -183,23 +181,44 @@ export class MoveService {
 
             if (hasWinningCombination) {
                 console.log(`Player ${userId} has won the game!`);
-
-                const result = await this.gameRepository.finish(gameId);
-                if (!result) return false;
-
-                const game = await this.gameRepository.getByPublicId(gameId);
-                if (!game) return false;
-
-                // see if the winner is the x player
-                if (userId === game.xPlayerId.toString()) {
-                    return await this.gameRepository.handleResult(gameId, parseInt(userId), game.yPlayerId);
-                }
-
-                return await this.gameRepository.handleResult(gameId, parseInt(userId), game.xPlayerId);
+                return this.handleGameFinish(gameId, userId);
             }
         }
+    }
 
-        return false;
+    private async handleNecessaryChecks(game, gameId, userId, result, moveIndex) {
+        // after every move we check if the game is over (win or loss)
+        if (await this.isGameOver(gameId, userId)) {
+            if (game.xPlayerId === parseInt(userId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: false };
+            return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true, draw: false };
+        }
+
+        // after every move we check if the game is a draw
+        if (await this.isGameADraw(gameId)) {
+            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: true };
+        }
+
+        // check which player has played the move
+        if (game.xPlayerId === parseInt(userId)) {
+            return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: false, draw: false };
+        }
+
+        return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false, draw: false };
+    }
+
+    private async handleGameFinish(gameId, userId) {
+        const result = await this.gameRepository.finish(gameId);
+        if (!result) return false;
+
+        const game = await this.gameRepository.getByPublicId(gameId);
+        if (!game) return false;
+
+        // see if the winner is the x player
+        if (userId === game.xPlayerId.toString()) {
+            return await this.gameRepository.handleResult(gameId, parseInt(userId), game.yPlayerId);
+        }
+
+        return await this.gameRepository.handleResult(gameId, parseInt(userId), game.xPlayerId);
     }
 
     private async isGameADraw(gameId: string) {

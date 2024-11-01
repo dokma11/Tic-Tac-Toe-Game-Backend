@@ -57,7 +57,9 @@ export class MoveController {
     private async getAllByGameId(req: Request, res: Response) {
         console.log('Move controller: get all by game id');
 
-        if (!req.params.gameId) return res.status(400).send('Game id must be provided');
+        if (!req.params.gameId) {
+            return res.status(400).send('Game id must be provided');
+        }
 
         const result = await this.service.getAllByGameId(req.params.gameId);
         if (!result) {
@@ -72,7 +74,9 @@ export class MoveController {
     private async getAllByUserId(req: Request, res: Response) {
         console.log('Move controller: get all by user id');
 
-        if (!req.params.userId) return res.status(400).send('User id must be provided');
+        if (!req.params.userId) {
+            return res.status(400).send('User id must be provided');
+        }
 
         const result = await this.service.getAllByUserId(req.params.userId);
         if (!result) {

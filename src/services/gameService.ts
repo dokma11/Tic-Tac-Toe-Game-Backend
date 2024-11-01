@@ -66,7 +66,9 @@ export class GameService {
         const game = await this.repository.getByPublicId(publicId);
 
         // only the games creator (x player) can cancel the game
-        if(game.xPlayerId !== parseInt(userId)) return { success: false, game: null };
+        if(game.xPlayerId !== parseInt(userId)) {
+            return { success: false, game: null };
+        }
 
         const result = await this.repository.cancel(publicId);
         return { success: true, game: result };

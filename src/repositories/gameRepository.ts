@@ -182,6 +182,9 @@ export class GameRepository implements IGameRepository {
                     moves: true,
                     xPlayer: true,
                     yPlayer: true
+                },
+                orderBy: {
+                    id: 'desc'
                 }
             }),
             'Could not get all finished games with moves by player id',

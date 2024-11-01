@@ -25,10 +25,14 @@ export class UserService {
     public async login(reqBody) {
         console.log('User service: login')
         const user = await this.repository.getByEmail(reqBody.email);
-        if (!user) return { success: false, user: null }
+        if (!user) {
+            return { success: false, user: null }
+        }
 
         const isPasswordValid = await bcrypt.compare(reqBody.password, user.password)
-        if (!isPasswordValid) return { success: false, id: -1 };
+        if (!isPasswordValid) {
+            return { success: false, id: -1 };
+        }
 
         return { success: true, id: user.id };
     }
@@ -36,7 +40,9 @@ export class UserService {
     public async create(newUser: User) {
         console.log('User service: create')
         const existingUser = await this.repository.getByEmail(newUser.email);
-        if (existingUser) return { success: false, user: null }
+        if (existingUser) {
+            return { success: false, user: null }
+        }
 
         const user = {
             id: -10,
