@@ -16,14 +16,17 @@ export class WebSocketService {
     }
 
     private setupWebSocket() {
+        // FIXME: Dodaj tip na ws
         this.wss.on("connection", (ws) => {
             console.log("New WebSocket connection established");
 
+            // FIXME: Dodaj tip na message i tip koji funkcija vraca
             ws.on("message", async (message) => {
                 console.log("Received:", message.toString());
                 console.log('Broj klijenata: ' + this.clients.size);
                 return await this.handleMessage(message, ws);
             });
+            // FIXME: Dodaj tip koji funkcija vraca
             ws.on("close", () => {
                 console.log("WebSocket connection closed");
                 for (const [key, clientWs] of this.clients.entries()) {
@@ -36,6 +39,7 @@ export class WebSocketService {
         });
     }
 
+    // FIXME: Dodaj tipove za oba parametra i tip koji funkcija vraca
     private async handleMessage(message, ws) {
         if(message.toString().includes('move')) {
             console.log('Move called');
@@ -49,6 +53,7 @@ export class WebSocketService {
         }
     }
 
+    // FIXME: Dodaj tip za parametar i tip koji funkcija vraca
     private async handleMoveMessage(message) {
         const result = await this.moveController.handleWebSocketMessage(message);
 
@@ -61,6 +66,7 @@ export class WebSocketService {
         }
     }
 
+    // FIXME: Dodaj tip za parametar i tip koji funkcija vraca
     private async handleSinglePlayerMoveMessage(message) {
         // user made move
         const result = await this.moveController.handleWebSocketMessage(message);
@@ -80,12 +86,14 @@ export class WebSocketService {
             + result.gameOver.toString() + ';' + computerResult.moveIndex);
     }
 
+    // FIXME: Dodaj tip koji funkcija vraca
     public sendMessageToClient(playerId: string, message: string) {
         const clientWs = this.clients.get(playerId);
         if (!clientWs) return console.log(`Client with playerId ${playerId} not found`);
         return clientWs.send(message);
     }
 
+    // FIXME: Dodaj tip koji funkcija vraca
     public broadcastMessage(message: string) {
         this.clients.forEach((clientWs) => {
             clientWs.send(message);

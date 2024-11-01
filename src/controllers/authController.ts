@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { UserService } from "../services/userService";
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); // FIXME: Ovo prebaci u import
 import dotenv from 'dotenv';
 import { UserRepository } from "../repositories/userRepository";
 import { GameRepository } from "../repositories/gameRepository";

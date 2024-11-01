@@ -22,6 +22,7 @@ export class UserService {
         return await this.repository.getById(id);
     }
 
+    // FIXME: parametar mora imati tip i return type dodati
     public async login(reqBody) {
         console.log('User service: login')
         const user = await this.repository.getByEmail(reqBody.email);

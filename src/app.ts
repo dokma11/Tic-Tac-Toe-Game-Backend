@@ -1,3 +1,4 @@
+// FIXME: Fajlovi treba na vrhu da imaju importe u sredini definicije / podesavanja i na dnu exporte
 import express from "express";
 const app = express();
 app.use(express.json());

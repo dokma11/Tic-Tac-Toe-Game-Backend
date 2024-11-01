@@ -6,6 +6,7 @@ import { handleDbOperation } from '../middlewares/databaseOperations';
 export class MoveRepository implements IMoveRepository {
     constructor() { }
 
+    // FIXME: newMove treba da ima definisan tip
     public async create(newMove): Promise<Move> {
         console.log('Move repository: create');
         return handleDbOperation(

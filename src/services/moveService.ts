@@ -46,6 +46,7 @@ export class MoveService {
         return await this.repository.getAllByUserId(userId);
     }
 
+    // FIXME: dodati tip za gameId i return type
     public async createComputerMove(gameId) {
         console.log('moveService: create computer move')
 
@@ -173,8 +174,10 @@ export class MoveService {
         return await this.checkWinningCombination(winningCombinations, userMoves, userId, gameId);
     }
 
+    // FIXME: parametri moraju imati tipove i return type dodati
     private async checkWinningCombination(winningCombinations, userMoves, userId, gameId) {
         for (const combination of winningCombinations) {
+            // FIXME: takodje tipovi na pos i move
             const hasWinningCombination = combination.every(pos =>
                 userMoves.some(move => move.xCoordinate === pos.x && move.yCoordinate === pos.y)
             );
@@ -186,6 +189,7 @@ export class MoveService {
         }
     }
 
+    // FIXME: parametri moraju imati tipove i return type dodati
     private async handleNecessaryChecks(game, gameId, userId, result, moveIndex) {
         // after every move we check if the game is over (win or loss)
         if (await this.isGameOver(gameId, userId)) {
@@ -206,6 +210,7 @@ export class MoveService {
         return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false, draw: false };
     }
 
+    // FIXME: parametri moraju imati tipove i return type dodati
     private async handleGameFinish(gameId, userId) {
         const result = await this.gameRepository.finish(gameId);
         if (!result) return false;

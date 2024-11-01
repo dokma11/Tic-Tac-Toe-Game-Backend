@@ -2,7 +2,7 @@ import { MoveService } from "../services/moveService";
 import { Router, Request, Response } from "express";
 import { MoveRepository } from "../repositories/moveRepository";
 import { GameRepository } from "../repositories/gameRepository";
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken'); // FIXME: Prebaci u import
 
 export class MoveController {
     private router: Router;
@@ -62,6 +62,7 @@ export class MoveController {
         }
 
         const result = await this.service.getAllByGameId(req.params.gameId);
+        // FIXME: Sto bi ovo bilo 500? Sta ako unesem igru koja ne postoji, onda nije greska servera nego greska korisnika -> 404
         if (!result) {
             console.log('Failed to retrieve moves by game id: ' + req.params.gameId);
             return res.status(500).send('Game id must be provided');
@@ -79,6 +80,7 @@ export class MoveController {
         }
 
         const result = await this.service.getAllByUserId(req.params.userId);
+        // FIXME: Sto bi ovo bilo 500? Sta ako unesem korisnika koji ne postoji, onda nije greska servera nego greska korisnika -> 404
         if (!result) {
             console.log('Failed to retrieve moves by user id: ' + req.params.userId);
             return res.status(500).send('User id must be provided');
