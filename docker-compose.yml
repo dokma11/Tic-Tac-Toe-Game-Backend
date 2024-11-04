@@ -1,0 +1,43 @@
+version: '3.9'
+
+services:
+  tt-be:
+    build: .
+    image: tt-be
+    restart: always
+    networks:
+      - database
+    ports:
+      - "3000:3000"
+    depends_on:
+      tt-be-db:
+        condition: service_healthy
+
+  tt-be-db:
+    image: postgres
+    container_name: tt-be-database
+    networks:
+      - database
+    ports:
+      - "5433:5432"
+    environment:
+      - POSTGRES_DB=tt
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=super
+    volumes:
+      - tt-be-data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+
+volumes:
+  tt-be-data:
+    driver: local
+    name: tt-be-data
+
+networks:
+  database:
+    name: database
+    driver: bridge
