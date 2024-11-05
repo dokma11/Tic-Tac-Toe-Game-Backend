@@ -1,6 +1,7 @@
 import { IMoveRepository } from "../repositories/interfaces/iMoveRepository";
-import { Move } from "../models/move";
 import { IGameRepository } from "../repositories/interfaces/iGameRepository";
+import { Move } from "../models/move";
+import { Game } from "../models/game";
 
 export class MoveService {
     private repository: IMoveRepository;
@@ -13,87 +14,115 @@ export class MoveService {
 
     public async create(moveIndex: string, gameId: string, userId: string): Promise<{success: boolean, move: Move,
         player: string, moveIndex: string, gameOver: boolean, draw: boolean}> {
-        console.log('Game service: create');
-        const coordinates = this.convertIndexToArray(moveIndex);
 
-        const game = await this.gameRepository.getByPublicId(gameId);
-        if(!game) {
+        console.log('Move service: create');
+        const coordinates: number[] = this.convertIndexToArray(moveIndex);
+
+        const game: Game = await this.gameRepository.getByPublicId(gameId);
+        if (!game) {
+            console.log('Error: could not get the game by its public id: ', gameId);
             return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
         }
 
         const newMove = {
+            id: -1,
             gameId: game.id,
-            userId: userId,
+            userId: parseInt(userId),
             xCoordinate: coordinates[0],
             yCoordinate: coordinates[1],
         }
 
-        const result = await this.repository.create(newMove);
-        if(!result) {
+        console.log('newMove: ', newMove);
+
+        const result: Move = await this.repository.create(newMove);
+        if (!result) {
+            console.log('Error: could not create a new move');
             return { success: false, move: null, player: '', moveIndex: '', gameOver: false, draw: false };
         }
 
-        return await this.handleNecessaryChecks(game, gameId, userId, result, moveIndex);
+        try {
+            return await this.handleNecessaryChecks(game, gameId, userId, result, moveIndex);
+        } catch (e) {
+            console.log(e, e.message);
+            throw new Error(e);
+        }
     }
 
     public async getAllByGameId(gameId: string): Promise<Move[]> {
         console.log('Game service: get all by game id');
-        return await this.repository.getAllByGameId(gameId);
+
+        const moves: Move[] = await this.repository.getAllByGameId(gameId);
+        if (!moves) {
+            console.log('Error: Could not get all moves by game id: ', gameId);
+            return null;
+        }
+        return moves;
     }
 
     public async getAllByUserId(userId: string): Promise<Move[]> {
         console.log('Game service: get all by user id');
-        return await this.repository.getAllByUserId(userId);
+
+        const moves: Move[] = await this.repository.getAllByUserId(userId);
+        if (!moves) {
+            console.log('Error: Could not get all moves by user id: ', userId);
+            return null;
+        }
+        return moves;
     }
 
     // FIXME: dodati tip za gameId i return type
-    public async createComputerMove(gameId) {
+    public async createComputerMove(gameId: string): Promise<{ success: boolean, move: Move, player: string, moveIndex: string, gameOver: boolean }> {
         console.log('moveService: create computer move')
 
-        const game = await this.gameRepository.getByPublicId(gameId);
-        if(!game) {
+        const game: Game = await this.gameRepository.getByPublicId(gameId);
+        if (!game) {
+            console.log('Error: Could not get the game by public id: ', gameId);
             return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
         }
 
         // id of the "computer user"
         const computerId = "-111";
-        const moveCoordinates = await this.chooseMove(game.id);
-        const moveIndex = this.convertArrayToIndex(moveCoordinates.xCoordinate, moveCoordinates.yCoordinate);
+        const moveCoordinates: { xCoordinate: number, yCoordinate: number } = await this.chooseMove(game.id.toString());
+        if (!moveCoordinates) {
+            console.log('Error: could not choose a move for the computer');
+            return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
+        }
+        const moveIndex: number = this.convertArrayToIndex(moveCoordinates.xCoordinate, moveCoordinates.yCoordinate);
 
         const newMove = {
+            id: -1,
             gameId: game.id,
             userId: parseInt(computerId),
             xCoordinate: moveCoordinates.xCoordinate,
             yCoordinate: moveCoordinates.yCoordinate,
         }
 
-        const result = await this.repository.create(newMove);
-
         // racunar ce uvek biti y igrac (O)
-        if(!result) {
+        const result: Move = await this.repository.create(newMove);
+        if (!result) {
+            console.log('Error: Could not create a new move');
             return { success: false, move: null, player: '', moveIndex: '', gameOver: false };
         }
 
         // after every move we check if the game is over
         if (await this.isGameOver(gameId, computerId)) {
-            return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: true };
+            return { success: true, move: result, player: 'y', moveIndex: moveIndex.toString(), gameOver: true };
         }
 
-        return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false };
+        return { success: true, move: result, player: 'y', moveIndex: moveIndex.toString(), gameOver: false };
     }
 
-    private async chooseMove(gameId) {
+    private async chooseMove(gameId: string): Promise<{ xCoordinate: number, yCoordinate: number }> {
         console.log('move service: choose move');
 
-        const madeMoves = await this.repository.getAllByGameId(gameId);
-
+        const madeMoves: Move[] = await this.repository.getAllByGameId(gameId);
         if (madeMoves.length === 9){
             console.log('The computer can not choose a move because it has no left moves to make.');
             return { xCoordinate: -1, yCoordinate: -1 };
         }
 
         // initialize a new move
-        let newMove = {
+        let newMove: { xCoordinate: number, yCoordinate: number } = {
             xCoordinate: 1,
             yCoordinate: 1,
         };
@@ -105,12 +134,12 @@ export class MoveService {
                 yCoordinate: Math.floor(Math.random() * 3)
             };
         }
-        while (madeMoves.some(pos => newMove.xCoordinate === pos.xCoordinate && newMove.yCoordinate === pos.yCoordinate));
+        while (madeMoves.some((pos: Move): boolean => newMove.xCoordinate === pos.xCoordinate && newMove.yCoordinate === pos.yCoordinate));
 
         return newMove;
     }
 
-    private convertIndexToArray(index) {
+    private convertIndexToArray(index: string): number[] {
         console.log('Game service: convert index to array');
 
         switch(parseInt(index)) {
@@ -150,14 +179,17 @@ export class MoveService {
         return null;
     }
 
-    private async isGameOver(gameId: string, userId: string) {
+    private async isGameOver(gameId: string, userId: string): Promise<Game> {
         console.log('Game service: is game over');
 
         // user must have at least three moves made so he/she could win
-        const userMoves = await this.repository.getAllByUserAndGameId(userId, gameId);
-        if (userMoves.length < 3) return false;
+        const userMoves: Move[] = await this.repository.getAllByUserAndGameId(userId, gameId);
+        if (userMoves.length < 3){
+            console.log('The user has not made three moves so there is no possible way for the game to be over');
+            return undefined;
+        }
 
-        const winningCombinations = [
+        const winningCombinations: { x: number, y: number }[][] = [
             // winning rows
             [{ x: 0, y: 0 }, { x: 0, y: 1 }, { x: 0, y: 2 }],
             [{ x: 1, y: 0 }, { x: 1, y: 1 }, { x: 1, y: 2 }],
@@ -171,26 +203,38 @@ export class MoveService {
             [{ x: 0, y: 2 }, { x: 1, y: 1 }, { x: 2, y: 0 }],
         ];
 
-        return await this.checkWinningCombination(winningCombinations, userMoves, userId, gameId);
+        try {
+            return await this.checkWinningCombination(winningCombinations, userMoves, userId, gameId);
+        } catch (e) {
+            console.log(e, e.message);
+            throw new Error(e);
+        }
     }
 
     // FIXME: parametri moraju imati tipove i return type dodati
-    private async checkWinningCombination(winningCombinations, userMoves, userId, gameId) {
+    private async checkWinningCombination(winningCombinations: { x: number, y: number }[][], userMoves: Move[], userId: string, gameId: string): Promise<Game> {
         for (const combination of winningCombinations) {
             // FIXME: takodje tipovi na pos i move
-            const hasWinningCombination = combination.every(pos =>
-                userMoves.some(move => move.xCoordinate === pos.x && move.yCoordinate === pos.y)
+            const hasWinningCombination: boolean = combination.every((pos: { x: number, y: number }): boolean =>
+                userMoves.some((move: Move): boolean => move.xCoordinate === pos.x && move.yCoordinate === pos.y)
             );
 
             if (hasWinningCombination) {
                 console.log(`Player ${userId} has won the game!`);
-                return this.handleGameFinish(gameId, userId);
+                try {
+                    return await this.handleGameFinish(gameId, userId);
+                }
+                catch (e) {
+                    console.log(e, e.message);
+                    throw new Error(e);
+                }
             }
         }
     }
 
     // FIXME: parametri moraju imati tipove i return type dodati
-    private async handleNecessaryChecks(game, gameId, userId, result, moveIndex) {
+    private async handleNecessaryChecks(game: Game, gameId: string, userId: string, result: Move, moveIndex: string):
+        Promise<{ success: boolean, move: Move, player: string, moveIndex: string, gameOver: boolean, draw: boolean }> {
         // after every move we check if the game is over (win or loss)
         if (await this.isGameOver(gameId, userId)) {
             if (game.xPlayerId === parseInt(userId)) return { success: true, move: result, player: 'x', moveIndex: moveIndex, gameOver: true, draw: false };
@@ -211,29 +255,60 @@ export class MoveService {
     }
 
     // FIXME: parametri moraju imati tipove i return type dodati
-    private async handleGameFinish(gameId, userId) {
-        const result = await this.gameRepository.finish(gameId);
-        if (!result) return false;
+    private async handleGameFinish(gameId: string, userId: string): Promise<Game> {
+        const result: Game = await this.gameRepository.finish(gameId);
+        if (!result) {
+            console.log('Error: the game could not be finished, public id: ', gameId);
+            return null;
+        }
 
-        const game = await this.gameRepository.getByPublicId(gameId);
-        if (!game) return false;
+        const game: Game = await this.gameRepository.getByPublicId(gameId);
+        if (!game) {
+            console.log('Error: could not get the game with public id: ', gameId);
+            return null;
+        }
 
         // see if the winner is the x player
         if (userId === game.xPlayerId.toString()) {
-            return await this.gameRepository.handleResult(gameId, parseInt(userId), game.yPlayerId);
+            try {
+                return await this.gameRepository.handleResult(gameId, parseInt(userId), game.yPlayerId);
+            } catch (e) {
+                console.log(e, e.message);
+                throw new Error(e);
+            }
         }
 
-        return await this.gameRepository.handleResult(gameId, parseInt(userId), game.xPlayerId);
+        try {
+            return await this.gameRepository.handleResult(gameId, parseInt(userId), game.xPlayerId);
+        } catch (e) {
+            console.log(e, e.message);
+            throw new Error(e);
+        }
     }
 
-    private async isGameADraw(gameId: string) {
+    private async isGameADraw(gameId: string): Promise<boolean> {
         console.log('Game service: is game a draw');
 
-        const allMoves = await this.repository.getAllByGamePublicId(gameId);
-        if (allMoves.length !== 9) return false;
+        const allMoves: Move[] = await this.repository.getAllByGamePublicId(gameId);
+        if (!allMoves) {
+            console.log('Error: could not get all the moves by game public id: ', gameId);
+            throw new Error('Error: could not get all the moves by game public id');
+        }
+
+        if (allMoves.length !== 9) {
+            console.log('There are no nine moves made so the game can not possibly be a draw');
+            return false;
+        }
 
         console.log('The game is a draw!');
-        await this.gameRepository.finish(gameId);
+
+        try {
+            await this.gameRepository.finish(gameId);
+        } catch (e) {
+            console.error(e, e.message);
+            throw new Error(e);
+        }
+
         return true
     }
 }

@@ -7,13 +7,13 @@ export class GameRepository implements IGameRepository {
     constructor() { }
 
     // FIXME: newGame bi trebao da ima tip
-    public async create(newGame): Promise<Game> {
+    public async create(newGame: Game): Promise<Game> {
         console.log('Game repository: create')
         return handleDbOperation(
             () => prisma.game.create({
                 data: {
                     publicId: newGame.publicId,
-                    xPlayerId: parseInt(newGame.xPlayerId),
+                    xPlayerId: newGame.xPlayerId,
                     status: newGame.status,
                     type: newGame.type,
                 }
@@ -34,24 +34,24 @@ export class GameRepository implements IGameRepository {
         );
     }
 
-    public async getByPublicId(publicId:string) {
+    public async getByPublicId(publicId:string): Promise<Game> {
         console.log(`Game repository: get by publicId: ${publicId}`);
         return handleDbOperation(
             () => prisma.game.findUnique({
                 where: {
-                    publicId: parseInt(publicId)
+                    publicId: publicId
                 }
             }),
             'Could not get the game by public id'
         );
     }
 
-    public async getWithMovesByPublicId(publicId: string) {
+    public async getWithMovesByPublicId(publicId: string): Promise<Game> {
         console.log(`Game repository: get game with moves by public id: ${publicId}`);
         return handleDbOperation(
             () => prisma.game.findUnique({
                 where: {
-                    publicId: parseInt(publicId),
+                    publicId: publicId,
                 },
                 include: {
                     moves: true,
@@ -67,7 +67,7 @@ export class GameRepository implements IGameRepository {
         return handleDbOperation(
             () => prisma.game.update({
                 where: {
-                    publicId: parseInt(publicId)
+                    publicId: publicId
                 },
                 data: {
                     yPlayerId: parseInt(playerId),
@@ -80,12 +80,12 @@ export class GameRepository implements IGameRepository {
     }
 
     // FIXME: PublicId treba da ima tip definisan
-    public async cancel(publicId): Promise<Game> {
+    public async cancel(publicId: string): Promise<Game> {
         console.log(`Game repository: cancel game with publicId: ${publicId}`);
         return handleDbOperation(
             () => prisma.game.update({
                 where: {
-                    publicId: parseInt(publicId)
+                    publicId: publicId
                 },
                 data: {
                     status: 3
@@ -96,12 +96,12 @@ export class GameRepository implements IGameRepository {
     }
 
     // FIXME: PublicId treba da ima tip definisan
-    public async finish(publicId): Promise<Game> {
+    public async finish(publicId: string): Promise<Game> {
         console.log(`Game repository: finish the game with publicId: ${publicId}`);
         return handleDbOperation(
             () => prisma.game.update({
                 where: {
-                    publicId: parseInt(publicId)
+                    publicId: publicId
                 },
                 data: {
                     status: 2,
@@ -117,7 +117,7 @@ export class GameRepository implements IGameRepository {
         return handleDbOperation(
             () => prisma.game.update({
                 where: {
-                    publicId: parseInt(publicId)
+                    publicId: publicId
                 },
                 data: {
                     winnerId: winnerId,
@@ -125,32 +125,6 @@ export class GameRepository implements IGameRepository {
                 }
             }),
             'Could not handle the result of the finished game with publicId',
-        );
-    }
-
-    public async getAllByWinnerId(userId: string): Promise<Game[]> {
-        console.log(`Game repository: get all by winner id: ${userId}`);
-        return handleDbOperation(
-            () => prisma.game.findMany({
-                where: {
-                    winnerId: parseInt(userId),
-                    status: 2
-                }
-            }),
-            'Could not get all the games by the winner id'
-        );
-    }
-
-    public async getAllByLoserId(userId: string): Promise<Game[]> {
-        console.log(`Game repository: get all by loser id: ${userId}`);
-        return handleDbOperation(
-            () => prisma.game.findMany({
-                where: {
-                    loserId: parseInt(userId),
-                    status: 2
-                }
-            }),
-            'Could not get all the games by the loser id'
         );
     }
 

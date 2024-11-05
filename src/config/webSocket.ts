@@ -1,5 +1,5 @@
-import { WebSocketServer, WebSocket } from "ws";
 import http from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { MoveController } from "../controllers/moveController";
 
 export class WebSocketService {
@@ -15,19 +15,24 @@ export class WebSocketService {
         console.log('WebSocket service started');
     }
 
-    private setupWebSocket() {
+    private setupWebSocket(): void {
         // FIXME: Dodaj tip na ws
-        this.wss.on("connection", (ws) => {
+        this.wss.on("connection", (ws: WebSocketServer): void => {
             console.log("New WebSocket connection established");
 
             // FIXME: Dodaj tip na message i tip koji funkcija vraca
-            ws.on("message", async (message) => {
-                console.log("Received:", message.toString());
-                console.log('Broj klijenata: ' + this.clients.size);
-                return await this.handleMessage(message, ws);
+            ws.on("message", async (message: string): Promise<void> => {
+                console.log("Received:", message);
+                console.log('Broj klijenata: ', this.clients.size);
+                try {
+                    return await this.handleMessage(message, ws);
+                } catch (e) {
+                    console.log(e, e.message);
+                    throw e;
+                }
             });
             // FIXME: Dodaj tip koji funkcija vraca
-            ws.on("close", () => {
+            ws.on("close", (): void => {
                 console.log("WebSocket connection closed");
                 for (const [key, clientWs] of this.clients.entries()) {
                     if (clientWs === ws) {
@@ -40,22 +45,36 @@ export class WebSocketService {
     }
 
     // FIXME: Dodaj tipove za oba parametra i tip koji funkcija vraca
-    private async handleMessage(message, ws) {
+    private async handleMessage(message: string, ws: WebSocketServer): Promise<void> {
         if(message.toString().includes('move')) {
             console.log('Move called');
-            return await this.handleMoveMessage(message);
+            try {
+                return await this.handleMoveMessage(message);
+            } catch (e) {
+                console.log(e, e.message);
+                throw e;
+            }
         } else if(message.toString().includes('single-player')) {
             console.log('Single player move called');
-            return await this.handleSinglePlayerMoveMessage(message);
+            try {
+                return await this.handleSinglePlayerMoveMessage(message);
+            } catch (e) {
+                console.log(e, e.message);
+                throw e;
+            }
         } else {
-            this.clients.set(message.toString(), ws);
+            this.clients.set(message, ws);
             return console.log('Broj klijenata (nakon dodavanja): ' + this.clients.size);
         }
     }
 
     // FIXME: Dodaj tip za parametar i tip koji funkcija vraca
-    private async handleMoveMessage(message) {
+    private async handleMoveMessage(message: string): Promise<void> {
         const result = await this.moveController.handleWebSocketMessage(message);
+        if (!result) {
+            console.log('Error: could not handle the websocket message');
+            return null;
+        }
 
         if(result.success && result.gameOver) {
             return this.broadcastMessage('finish;' + result.gameId + ';' + result.player + ';' + result.moveIndex + ';' + result.draw);
@@ -67,9 +86,14 @@ export class WebSocketService {
     }
 
     // FIXME: Dodaj tip za parametar i tip koji funkcija vraca
-    private async handleSinglePlayerMoveMessage(message) {
+    private async handleSinglePlayerMoveMessage(message: string): Promise<void> {
         // user made move
         const result = await this.moveController.handleWebSocketMessage(message);
+        if (!result) {
+            console.log('Error: could not handle the websocket message');
+            return null;
+        }
+
         if (result.success && result.gameOver) {
             return this.broadcastMessage('single-player-finish;' + result.gameId + ';x;' + result.moveIndex +
                 ';' + result.gameOver + ';' + '' + ';' + result.draw);
@@ -77,7 +101,12 @@ export class WebSocketService {
 
         // now create a computer move
         const computerResult = await this.moveController.computerMove(message);
-        if (result.success && result.gameOver) {
+        if (!computerResult) {
+            console.log('Error: could not make the computer move');
+            return null;
+        }
+
+        if (computerResult.success && computerResult.gameOver) {
             return this.broadcastMessage('single-player-finish;' + result.gameId + ';y;' + result.moveIndex + ';' +
                 computerResult.gameOver + ';' + computerResult.moveIndex + ';' + result.draw);
         }
@@ -87,15 +116,8 @@ export class WebSocketService {
     }
 
     // FIXME: Dodaj tip koji funkcija vraca
-    public sendMessageToClient(playerId: string, message: string) {
-        const clientWs = this.clients.get(playerId);
-        if (!clientWs) return console.log(`Client with playerId ${playerId} not found`);
-        return clientWs.send(message);
-    }
-
-    // FIXME: Dodaj tip koji funkcija vraca
-    public broadcastMessage(message: string) {
-        this.clients.forEach((clientWs) => {
+    public broadcastMessage(message: string): void {
+        this.clients.forEach((clientWs: WebSocket): void => {
             clientWs.send(message);
         });
     }
