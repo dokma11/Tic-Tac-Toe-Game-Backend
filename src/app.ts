@@ -1,21 +1,31 @@
-import express from "express";
-const app = express();
+import express, { Express } from "express";
+import { WebSocketService } from "./config/webSocket";
+import { MoveController } from "./controllers/moveController";
+import { MoveService } from "./services/moveService";
+import { MoveRepository } from "./repositories/moveRepository";
+import { GameRepository } from "./repositories/gameRepository";
+import cors from "cors"
+import dotenv from 'dotenv';
+import http from "http";
+
+const app: Express = express();
 app.use(express.json());
 
-import cors from "cors"
 const corsOptions = {
     origin: "http://localhost:5173",
     methods: ["GET", "POST", "PUT", "DELETE"],
     credentials: true,
 };
+
 app.use(cors(corsOptions));
 
-import dotenv from 'dotenv';
 dotenv.config();
+
 const port = process.env.PORT as string;
-
-require("./config/routes")(app);
-
-app.listen(port, () => {
+export const server = http.createServer(app);
+server.listen(port, (): void => {
     console.log(`listening on port ${port}`);
 });
+
+export const webSocketService = new WebSocketService(server, new MoveController(new MoveService(new MoveRepository(), new GameRepository())));
+require("./config/routes")(app);
