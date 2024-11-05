@@ -1,4 +1,3 @@
-// FIXME: Fajlovi treba na vrhu da imaju importe u sredini definicije / podesavanja i na dnu exporte
 import express, { Express } from "express";
 import { WebSocketService } from "./config/webSocket";
 import { MoveController } from "./controllers/moveController";

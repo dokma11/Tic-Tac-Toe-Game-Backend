@@ -3,7 +3,7 @@ import { Request, Response, Router } from "express";
 import { UserService } from "../services/userService";
 import { UserRepository } from "../repositories/userRepository";
 import { GameRepository } from "../repositories/gameRepository";
-import { User } from "../models/user"; // FIXME: Prebaci u import
+import { User } from "../models/user";
 
 export class UserController {
     private router: Router;
@@ -28,7 +28,6 @@ export class UserController {
         }
 
         const result: User = await this.service.getByEmail(req.params.email);
-        // FIXME: 500 znaci da je nesto puklo na serveru, kad se ne pronadje user znaci da ne postoji -> 404
         if (!result) {
             console.log('Failed to retrieve by email!');
             return res.status(404).send('Bad request: Could not find the user');
@@ -52,7 +51,6 @@ export class UserController {
         }
 
         const result: User = await this.service.getById(req.params.id);
-        // FIXME: 500 znaci da je nesto puklo na serveru, kad se ne pronadje user znaci da ne postoji -> 404
         if (!result) {
             console.log('Failed to retrieve by id!');
             return res.status(404).send('Bad request: Could not find the user');
@@ -76,9 +74,7 @@ export class UserController {
             return res.status(401).send('Wrong jwt');
         }
 
-        // FIXME: Get By Id i Get Profile Statistics ti mogu biti jedan query, ako koristis relacione baze onda je dobro da iskoristis njihove mogucnosti + 1 asinhroni poziv ima manje sansi da pukne nego 2 asinhrona poziva
         const result = await this.service.getProfileStatistics(decoded.id.toString());
-        // FIXME: 500 znaci da je nesto puklo na serveru, kad se ne pronadje user statistika znaci da ne postoji -> 404
         if (!result) {
             console.log('Error: Could not retrieve the statistics');
             return res.status(404).send('Bad request: Could not retrieve profile statistics for user with id: ' + decoded.id.toString());

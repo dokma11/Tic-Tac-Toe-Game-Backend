@@ -70,7 +70,6 @@ export class MoveService {
         return moves;
     }
 
-    // FIXME: dodati tip za gameId i return type
     public async createComputerMove(gameId: string): Promise<{ success: boolean, move: Move, player: string, moveIndex: string, gameOver: boolean }> {
         console.log('moveService: create computer move')
 
@@ -211,10 +210,8 @@ export class MoveService {
         }
     }
 
-    // FIXME: parametri moraju imati tipove i return type dodati
     private async checkWinningCombination(winningCombinations: { x: number, y: number }[][], userMoves: Move[], userId: string, gameId: string): Promise<Game> {
         for (const combination of winningCombinations) {
-            // FIXME: takodje tipovi na pos i move
             const hasWinningCombination: boolean = combination.every((pos: { x: number, y: number }): boolean =>
                 userMoves.some((move: Move): boolean => move.xCoordinate === pos.x && move.yCoordinate === pos.y)
             );
@@ -232,7 +229,6 @@ export class MoveService {
         }
     }
 
-    // FIXME: parametri moraju imati tipove i return type dodati
     private async handleNecessaryChecks(game: Game, gameId: string, userId: string, result: Move, moveIndex: string):
         Promise<{ success: boolean, move: Move, player: string, moveIndex: string, gameOver: boolean, draw: boolean }> {
         // after every move we check if the game is over (win or loss)
@@ -254,7 +250,6 @@ export class MoveService {
         return { success: true, move: result, player: 'y', moveIndex: moveIndex, gameOver: false, draw: false };
     }
 
-    // FIXME: parametri moraju imati tipove i return type dodati
     private async handleGameFinish(gameId: string, userId: string): Promise<Game> {
         const result: Game = await this.gameRepository.finish(gameId);
         if (!result) {

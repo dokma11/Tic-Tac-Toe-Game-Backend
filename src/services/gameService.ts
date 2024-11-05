@@ -14,7 +14,6 @@ export class GameService {
 
         // game's public id is randomized so we need to make sure it doesn't already exist in the database
         let publicId: string;
-        // FIXME: Nemoj ovo ovako raditi, postoji recimo Date.now() on vraca unix timestamp ( koji je skoro pa unikatan ) i mozes ga ili iskombinovati sa necim ili imas npm paket uuid v4 ili kako se vec zove
         publicId = uuidv4();
         console.log('Oov je public id nakon promene: ', publicId);
 
@@ -29,7 +28,6 @@ export class GameService {
 
         if (type == '1') {
             game.yPlayerId = -111;
-            // FIXME: try catch za errore?
             try {
                 await this.repository.create(game);
                 return await this.repository.start(game.publicId.toString(), game.yPlayerId);

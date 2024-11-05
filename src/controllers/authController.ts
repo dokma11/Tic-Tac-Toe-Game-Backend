@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'; // FIXME: Ovo prebaci u import
+import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Router, Request, Response } from "express";
 import { UserService } from "../services/userService";
@@ -57,7 +57,7 @@ export class AuthController {
 
         console.log('Successfully registered a new user!');
         const token: string = jwt.sign({ id: result.user.id }, process.env.JWT as string);
-        return res.header('x-auth-token', token).send({ firstName: result.user.firstName, lastName: result.user.lastName, email: result.user.email });
+        return res.send(token);
     }
 
     private validate(email: string, password: string): boolean {

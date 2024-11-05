@@ -1,4 +1,4 @@
-import jwt from 'jsonwebtoken'; // FIXME: Prebaci u import
+import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import { Request, Response, Router } from "express";
 import { GameService } from "../services/gameService";
@@ -17,7 +17,6 @@ export class GameController {
     constructor(private readonly service: GameService, private readonly wss: WebSocketService) {
         this.router = Router();
         this.setupRoutes();
-        // FIXME: Mozda dodaj i proveru tipa wss instanceof WebSocketService ili koji god
         if (wss && wss instanceof WebSocketService) {
             this.webSocketService = wss;
         }
@@ -71,7 +70,6 @@ export class GameController {
         }
 
         const result: Game = await this.service.getById(req.params.id);
-        // FIXME: Sto bi ovo bilo 500? Sta ako unesem igru koja ne postoji, onda nije greska servera nego greska korisnika -> 404
         if (!result) {
             console.log('Failed to retrieve by id!');
             return res.status(404).send('Bad request: Could not find the game by id: ' + req.params.id);
@@ -90,7 +88,6 @@ export class GameController {
         }
 
         const result: Game = await this.service.getByPublicId(req.params.publicId);
-        // FIXME: Sto bi ovo bilo 500? Sta ako unesem igru koja ne postoji, onda nije greska servera nego greska korisnika -> 404
         if (!result) {
             console.log('Failed to retrieve by public id!');
             return res.status(404).send('Bad request: Could not find the game by public id');
@@ -109,7 +106,6 @@ export class GameController {
         }
 
         const result: Game = await this.service.getHistoryByPublicId(req.params.publicId);
-        // FIXME: Sto bi ovo bilo 500? Sta ako unesem igru koja ne postoji, onda nije greska servera nego greska korisnika -> 404
         if (!result) {
             console.log('Failed to retrieve by public id!');
             return res.status(404).send('Bad request: Could not find the game by public id' );
@@ -140,7 +136,6 @@ export class GameController {
         }
 
         const result: Game = await this.service.join(req.params.publicId, decoded.id.toString());
-        // FIXME: Sto bi ovo bilo 500? Sta ako unesem igru koja ne postoji, onda nije greska servera nego greska korisnika -> 404
         if (!result) {
             console.log('Failed to join the game with public id: ', req.params.publicId);
             return res.status(404).send('Bad request: Could not join the game by public id' + req.params.publicId);
@@ -170,7 +165,6 @@ export class GameController {
             return res.status(401).send('Wrong jwt');
         }
 
-        // FIXME: Vraca ti { success: boolean, game: Game } a proveravas samo da li postoji objekat. Dodaj i proveru da li je success ( pretpostavljam da moze da vrati objekat a success da bude false cim si takav response napravio )
         const result: { success: boolean, game: Game } = await this.service.cancel(req.params.publicId, decoded.id.toString());
         if (!result || !result.success) {
             console.log('Failed to cancel the game with public id: ', req.params.publicId);
@@ -201,7 +195,6 @@ export class GameController {
             return res.status(500).send('Internal server error: Could not retrieve all the games by player id' + decoded.id.toString());
         }
 
-        // FIXME: Ne treba ti plus za console log, samo prosledis kao sledeci parametar, tipa console.log('Successfully retrieved all the games with player id: ', decoded.id);
         console.log('Successfully retrieved all the games with player id: ', decoded.id.toString());
         return res.status(200).send(result);
     }
@@ -210,7 +203,6 @@ export class GameController {
         return (!authHeader || !authHeader.startsWith('Bearer '))
     }
 
-    // FIXME: Dodaj tip na token i tip na output funkcije
     private verifyToken(token: string): { id: number } {
         try {
             return jwt.verify(token, process.env.JWT as string) as { id: number };

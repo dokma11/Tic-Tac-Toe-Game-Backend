@@ -16,11 +16,9 @@ export class WebSocketService {
     }
 
     private setupWebSocket(): void {
-        // FIXME: Dodaj tip na ws
         this.wss.on("connection", (ws: WebSocketServer): void => {
             console.log("New WebSocket connection established");
 
-            // FIXME: Dodaj tip na message i tip koji funkcija vraca
             ws.on("message", async (message: string): Promise<void> => {
                 console.log("Received:", message);
                 console.log('Broj klijenata: ', this.clients.size);
@@ -31,7 +29,6 @@ export class WebSocketService {
                     throw e;
                 }
             });
-            // FIXME: Dodaj tip koji funkcija vraca
             ws.on("close", (): void => {
                 console.log("WebSocket connection closed");
                 for (const [key, clientWs] of this.clients.entries()) {
@@ -44,7 +41,6 @@ export class WebSocketService {
         });
     }
 
-    // FIXME: Dodaj tipove za oba parametra i tip koji funkcija vraca
     private async handleMessage(message: string, ws: WebSocketServer): Promise<void> {
         if(message.toString().includes('move')) {
             console.log('Move called');
@@ -68,7 +64,6 @@ export class WebSocketService {
         }
     }
 
-    // FIXME: Dodaj tip za parametar i tip koji funkcija vraca
     private async handleMoveMessage(message: string): Promise<void> {
         const result = await this.moveController.handleWebSocketMessage(message);
         if (!result) {
@@ -85,7 +80,6 @@ export class WebSocketService {
         }
     }
 
-    // FIXME: Dodaj tip za parametar i tip koji funkcija vraca
     private async handleSinglePlayerMoveMessage(message: string): Promise<void> {
         // user made move
         const result = await this.moveController.handleWebSocketMessage(message);
@@ -115,7 +109,6 @@ export class WebSocketService {
             + result.gameOver.toString() + ';' + computerResult.moveIndex);
     }
 
-    // FIXME: Dodaj tip koji funkcija vraca
     public broadcastMessage(message: string): void {
         this.clients.forEach((clientWs: WebSocket): void => {
             clientWs.send(message);

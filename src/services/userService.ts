@@ -35,7 +35,6 @@ export class UserService {
         return user;
     }
 
-    // FIXME: parametar mora imati tip i return type dodati
     public async login(reqBody: { email: string, password: string }): Promise<{ success: boolean, id: number }> {
         console.log('User service: login')
 

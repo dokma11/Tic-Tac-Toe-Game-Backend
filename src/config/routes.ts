@@ -1,4 +1,3 @@
-// FIXME: Prebaci u import
 import express, { Express } from 'express';
 import auth from '../controllers/authController';
 import users from '../controllers/userController';

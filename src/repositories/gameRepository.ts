@@ -6,7 +6,6 @@ import { handleDbOperation } from '../middlewares/databaseOperations';
 export class GameRepository implements IGameRepository {
     constructor() { }
 
-    // FIXME: newGame bi trebao da ima tip
     public async create(newGame: Game): Promise<Game> {
         console.log('Game repository: create')
         return handleDbOperation(
@@ -79,7 +78,6 @@ export class GameRepository implements IGameRepository {
         )
     }
 
-    // FIXME: PublicId treba da ima tip definisan
     public async cancel(publicId: string): Promise<Game> {
         console.log(`Game repository: cancel game with publicId: ${publicId}`);
         return handleDbOperation(
@@ -95,7 +93,6 @@ export class GameRepository implements IGameRepository {
         )
     }
 
-    // FIXME: PublicId treba da ima tip definisan
     public async finish(publicId: string): Promise<Game> {
         console.log(`Game repository: finish the game with publicId: ${publicId}`);
         return handleDbOperation(
