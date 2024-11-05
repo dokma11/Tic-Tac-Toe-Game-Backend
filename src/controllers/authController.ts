@@ -27,13 +27,13 @@ export class AuthController {
 
         if (!this.validate(req.body.email, req.body.password)) {
             console.log('Auth controller: invalid email and password combination');
-            return res.status(404).send('Invalid email and password combination');
+            return res.status(400).send('Invalid email and password combination');
         }
 
         const result: { success: boolean, id: number } = await this.service.login(req.body);
         if (!result.success) {
             console.log('Failed to logn in with those credentials!');
-            return res.status(404).send('Invalid email and password combination');
+            return res.status(400).send('Invalid email and password combination');
         }
 
         console.log('Successfully logged in  with those credentials!');
@@ -46,13 +46,13 @@ export class AuthController {
 
         if (!this.validate(req.body.email, req.body.password)) {
             console.log('Auth controller: invalid email and password combination');
-            return res.status(404).send('Invalid email and password combination');
+            return res.status(400).send('Invalid email and password combination');
         }
 
         const result: { success: boolean, user: User } = await this.service.create(req.body);
         if(!result.success) {
             console.log('Failed to register a new user!');
-            return res.status(404).send('A user with this email already exists');
+            return res.status(400).send('A user with this email already exists');
         }
 
         console.log('Successfully registered a new user!');

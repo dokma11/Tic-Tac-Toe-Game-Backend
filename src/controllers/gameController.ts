@@ -43,7 +43,7 @@ export class GameController {
 
         if (!req.body.type) {
             console.log('Error: Game type must be defined');
-            return res.status(404).send('Game type must be defined');
+            return res.status(400).send('Game type must be defined');
         }
 
         const decoded: {id: number} = this.verifyToken(req.headers.authorization.split(' ')[1]);
@@ -67,7 +67,7 @@ export class GameController {
 
         if(!req.params.id) {
             console.log('Error: Id must be provided');
-            return res.status(404).send('Id must be provided');
+            return res.status(400).send('Id must be provided');
         }
 
         const result: Game = await this.service.getById(req.params.id);
@@ -86,7 +86,7 @@ export class GameController {
 
         if(!req.params.publicId) {
             console.log('Error: Invalid public id provided');
-            return res.status(404).send('Invalid public id provided');
+            return res.status(400).send('Invalid public id provided');
         }
 
         const result: Game = await this.service.getByPublicId(req.params.publicId);
@@ -105,7 +105,7 @@ export class GameController {
 
         if(!req.params.publicId) {
             console.log('Error: invalid public id provided');
-            return res.status(404).send('Invalid public id provided');
+            return res.status(400).send('Invalid public id provided');
         }
 
         const result: Game = await this.service.getHistoryByPublicId(req.params.publicId);
@@ -130,7 +130,7 @@ export class GameController {
 
         if (!req.params.publicId) {
             console.log('Error: Public id of the game must be provided')
-            return res.status(404).send('Public id of the game must be provided');
+            return res.status(400).send('Public id of the game must be provided');
         }
 
         const decoded: {id: number} = this.verifyToken(req.headers.authorization.split(' ')[1]);
@@ -161,7 +161,7 @@ export class GameController {
 
         if (!req.params.publicId) {
             console.log('Error: Public id of the game must be provided');
-            return res.status(404).send('Public id of the game must be provided');
+            return res.status(400).send('Public id of the game must be provided');
         }
 
         const decoded: {id: number} = this.verifyToken(req.headers.authorization.split(' ')[1]);

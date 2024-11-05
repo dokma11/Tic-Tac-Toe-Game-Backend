@@ -60,7 +60,7 @@ export class MoveController {
 
         if (!req.params.gameId) {
             console.log('Error: game id must be provided');
-            return res.status(404).send('Game id must be provided');
+            return res.status(400).send('Game id must be provided');
         }
 
         const result: Move[] = await this.service.getAllByGameId(req.params.gameId);
@@ -79,7 +79,7 @@ export class MoveController {
 
         if (!req.params.userId) {
             console.log('Error: user id must be provided');
-            return res.status(404).send('User id must be provided');
+            return res.status(400).send('User id must be provided');
         }
 
         const result: Move[] = await this.service.getAllByUserId(req.params.userId);

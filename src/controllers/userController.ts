@@ -24,7 +24,7 @@ export class UserController {
 
         if (!req.params.email) {
             console.log('Error: The email must be provided');
-            return res.status(404).send('The email must be provided');
+            return res.status(400).send('The email must be provided');
         }
 
         const result: User = await this.service.getByEmail(req.params.email);
@@ -48,7 +48,7 @@ export class UserController {
 
         if (!req.params.id) {
             console.log('Error: The user id must be provided');
-            return res.status(404).send('The user id must be provided');
+            return res.status(400).send('The user id must be provided');
         }
 
         const result: User = await this.service.getById(req.params.id);
@@ -80,7 +80,7 @@ export class UserController {
         const result = await this.service.getProfileStatistics(decoded.id.toString());
         // FIXME: 500 znaci da je nesto puklo na serveru, kad se ne pronadje user statistika znaci da ne postoji -> 404
         if (!result) {
-            console.log('Error: Could nto retrieve the statistics');
+            console.log('Error: Could not retrieve the statistics');
             return res.status(404).send('Bad request: Could not retrieve profile statistics for user with id: ' + decoded.id.toString());
         }
 
