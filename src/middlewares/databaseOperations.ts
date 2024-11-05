@@ -4,6 +4,5 @@ export async function handleDbOperation<T>(dbOperation: () => Promise<T>, errorM
         return await dbOperation();
     } catch (error) {
         console.error('Database operation failed: ' + errorMessage + ' ', error);
-        throw new Error(errorMessage);
     }
 }

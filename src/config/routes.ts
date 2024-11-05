@@ -1,10 +1,10 @@
-const express = require('express');
-const auth = require('../controllers/authController').default;
-const users = require('../controllers/userController').default;
-const games = require('../controllers/gameController').default;
-const moves = require('../controllers/moveController').default;
+import express, { Express } from 'express';
+import auth from '../controllers/authController';
+import users from '../controllers/userController';
+import games from '../controllers/gameController';
+import moves from '../controllers/moveController';
 
-module.exports = function(app) {
+module.exports = function(app: Express): void {
     app.use(express.json());
     app.use('/api/auth', auth.getRouter());
     app.use('/api/users', users.getRouter());

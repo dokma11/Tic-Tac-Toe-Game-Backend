@@ -6,13 +6,13 @@ import { handleDbOperation } from '../middlewares/databaseOperations';
 export class MoveRepository implements IMoveRepository {
     constructor() { }
 
-    public async create(newMove): Promise<Move> {
+    public async create(newMove: Move): Promise<Move> {
         console.log('Move repository: create');
         return handleDbOperation(
             () => prisma.move.create({
                 data: {
                     gameId: newMove.gameId,
-                    userId: parseInt(newMove.userId),
+                    userId: newMove.userId,
                     xCoordinate: newMove.xCoordinate,
                     yCoordinate: newMove.yCoordinate,
                 }
@@ -37,7 +37,7 @@ export class MoveRepository implements IMoveRepository {
             () => prisma.move.findMany({
                 where: {
                     game: {
-                        publicId: parseInt(publicId)
+                        publicId: publicId
                     }
                 }
             }),
@@ -62,7 +62,7 @@ export class MoveRepository implements IMoveRepository {
                 where: {
                     userId: parseInt(userId),
                     game: {
-                        publicId: parseInt(publicId)
+                        publicId: publicId
                     }
                 }
             }),

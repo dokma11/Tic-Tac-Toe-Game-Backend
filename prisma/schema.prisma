@@ -22,7 +22,7 @@ model User {
 
 model Game {
   id          Int       @id @default(autoincrement())
-  publicId    Int       @unique
+  publicId    String    @unique
   xPlayer     User      @relation("XPlayerGames", references: [id], fields: [xPlayerId])
   xPlayerId   Int
   yPlayer     User?     @relation("YPlayerGames", references: [id], fields: [yPlayerId])
