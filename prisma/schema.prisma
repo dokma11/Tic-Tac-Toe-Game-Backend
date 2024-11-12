@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  firstName String
+  lastName  String
+  email     String @unique
+  password  String
+  gamesAsX  Game[] @relation("XPlayerGames")
+  gamesAsY  Game[] @relation("YPlayerGames")
+  madeMoves Move[] @relation("UserWhoPlayedTheMove")
+  gamesWon  Game[] @relation("WinnerGames")
+  gamesLost Game[] @relation("LoserGames")
+}
+
+model Game {
+  id          Int       @id @default(autoincrement())
+  publicId    String    @unique
+  xPlayer     User      @relation("XPlayerGames", references: [id], fields: [xPlayerId])
+  xPlayerId   Int
+  yPlayer     User?     @relation("YPlayerGames", references: [id], fields: [yPlayerId])
+  yPlayerId   Int?
+  status      Int
+  type        Int
+  createdAt   DateTime  @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  moves       Move[]
+  winner      User?     @relation("WinnerGames", references: [id], fields: [winnerId])
+  winnerId    Int?
+  loser       User?     @relation("LoserGames", references: [id], fields: [loserId])
+  loserId     Int?
+}
+
+model Move {
+  id          Int      @id @default(autoincrement())
+  game        Game     @relation(references: [id], fields: [gameId])
+  gameId      Int
+  user        User     @relation("UserWhoPlayedTheMove", references: [id], fields: [userId])
+  userId      Int
+  xCoordinate Int
+  yCoordinate Int
+  createdAt   DateTime @default(now())
+
+  @@unique([gameId, xCoordinate, yCoordinate])
+}
